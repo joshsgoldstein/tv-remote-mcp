@@ -1,5 +1,5 @@
-[mcp_servers.samsung_tvs]
+[mcp_servers.home_control]
 command = "uv"
-args = ["--directory", "/absolute/path/to/tv-remote-mcp", "run", "--locked", "tv-remote-mcp"]
+args = ["--directory", "/absolute/path/to/tv-remote-mcp", "run", "--locked", "home-control-mcp"]
 startup_timeout_sec = 30
 tool_timeout_sec = 90

@@ -1,0 +1,22 @@
+name: home-control
+services:
+  home-control:
+    build: .
+    image: home-control:local
+    init: true
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8765:8765"
+    environment:
+      TV_REMOTE_WEB_TOKEN: ${TV_REMOTE_WEB_TOKEN:?Set a random token of at least 24 characters in .env}
+    volumes:
+      - home-control-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+volumes:
+  home-control-data:

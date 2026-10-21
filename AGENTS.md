@@ -1,14 +1,16 @@
 # Instructions for coding and setup agents
 
-This is a local Samsung TV controller with an MCP server and a browser panel.
+This is Home Control, a general smart-home control plane with MCP and a web dashboard.
+Samsung TVs are the first integration, not the product boundary.
 Read README.md and docs/AGENT_SETUP.md before setting it up for someone.
 
 ## Boundaries
 
 - Run the server on a Linux/macOS computer on the TV's home LAN. SSH and Tailscale
   are optional transports; do not assume the user has either.
-- Support Samsung TVs and The Frame only. Other devices, including ecobee, are
-  future integrations; do not claim they work or improvise thermostat commands.
+- Build new device support through the Integration contract in docs/INTEGRATIONS.md.
+  Samsung is currently implemented; LG, Sony, ecobee, and other devices are planned.
+  Do not claim unimplemented adapters work or improvise device commands.
 - Never bypass a device or master kill switch. Re-enable only when the user asks.
   New integrations must enforce both switches in their shared controller,
   including wake, pairing, and all command paths, with persistent state.
@@ -27,8 +29,9 @@ Read README.md and docs/AGENT_SETUP.md before setting it up for someone.
 
 Python 3.10+, uv with uv.lock. UI is static HTML/CSS/JS packaged in
 src/tv_remote_mcp/static; no Node build or external assets are needed.
-The web, CLI, and MCP entry points share Controller and Store. Keep validation
-and enforcement there, not only in frontend disabled buttons.
+The web, CLI, and MCP share Home, Integration adapters, and Store. Samsung retains
+its Controller for backward compatibility. Keep validation and kill-switch
+enforcement in the shared backend, not only in frontend disabled buttons.
 
 Run `uv sync --locked`, `uv run pytest -q`, `uv run ruff check src tests scripts`,
 `uv run ruff format --check src tests scripts`, `node --check src/tv_remote_mcp/static/app.js`
@@ -36,6 +39,10 @@ Run `uv sync --locked`, `uv run pytest -q`, `uv run ruff check src tests scripts
 Tests must use temporary stores and synthetic devices; never a home inventory.
 `PYTHONPATH=src uv run python tests/preview_web.py` starts a sample-device panel
 on localhost:8766 for browser QA; label it a demo and stop it after use.
+
+For Docker changes, read docs/DOCKER.md, build the image, and run scripts/container_smoke.py
+inside an isolated container with an empty inventory. Verify persistence after restart.
+Never run that smoke script against a user's existing device store.
 
 Before publishing, inspect staged files for private state, verify the wheel
 contains the static assets, and distinguish tested, deployed, and pending work.

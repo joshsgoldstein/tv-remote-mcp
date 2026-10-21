@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="300" viewBox="0 0 1240 300" role="img" aria-labelledby="title desc">
+<title id="title">Home Control</title><desc id="desc">Your home. One control plane. A local smart-home dashboard and MCP interface, built for device integrations.</desc>
+<rect x="1" y="1" width="1238" height="298" rx="22" fill="#fafafa" stroke="#e5e5e5"/>
+<rect x="56" y="53" width="48" height="48" rx="13" fill="#171717"/>
+<path d="m68 75 12-10 12 10m-21-2v17h6V80h6v10h6V73" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="120" y="84" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="20" font-weight="600" fill="#171717">HOME CONTROL</text>
+<text x="56" y="164" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="46" font-weight="650" letter-spacing="-1.5" fill="#171717">Your home. One control plane.</text>
+<text x="58" y="205" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="18" fill="#737373">Local dashboard. Assistant tools. Device integrations.</text>
+<text x="58" y="256" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="12" letter-spacing="1" fill="#525252">SELF-HOSTED  /  MCP  /  OPEN SOURCE</text>
+<g fill="none" stroke="#d4d4d4" stroke-width="2"><path d="M1000 145V70h94m-94 75v85h94m-94-85H900"/><circle cx="1000" cy="145" r="5" fill="#171717" stroke="#171717"/></g>
+<g fill="#fff" stroke="#e5e5e5"><rect x="848" y="112" width="76" height="66" rx="14"/><rect x="1073" y="37" width="76" height="66" rx="14"/><rect x="1073" y="197" width="76" height="66" rx="14"/></g>
+<g fill="none" stroke="#525252" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="870" y="130" width="32" height="23" rx="3"/><path d="M879 160h14m-7-7v7"/><path d="M1111 53v11m0 12v11m-17-17h9m16 0h9"/><circle cx="1111" cy="70" r="7"/><path d="M1106 214v16a8 8 0 1 0 10 0v-16a5 5 0 0 0-10 0Z"/><path d="M1111 223v16"/></g>
+</svg>

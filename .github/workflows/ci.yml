@@ -25,3 +25,32 @@ jobs:
       - run: sh -n scripts/connect.sh scripts/deploy.sh
       - run: node --check src/tv_remote_mcp/static/app.js
       - run: uv build
+
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Validate Compose configurations
+        env:
+          TV_REMOTE_WEB_TOKEN: ci-only-disposable-test-token
+        run: |
+          docker compose config --quiet
+          docker compose -f compose.host.yaml config --quiet
+      - run: docker build -t home-control:test .
+      - name: Verify container, MCP, and persistent switches
+        shell: bash
+        run: |
+          set -euo pipefail
+          trap 'docker rm -f home-control-smoke >/dev/null 2>&1 || true; docker volume rm home-control-smoke-data >/dev/null 2>&1 || true' EXIT
+          docker run -d --name home-control-smoke --read-only --cap-drop ALL --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=16m -e TV_REMOTE_WEB_TOKEN=ci-only-disposable-test-token -v home-control-smoke-data:/data home-control:test
+          for attempt in {1..30}; do
+            if [ "$(docker inspect -f '{{.State.Health.Status}}' home-control-smoke)" = healthy ]; then break; fi
+            sleep 2
+          done
+          docker exec -i home-control-smoke python < scripts/container_smoke.py
+          docker restart home-control-smoke
+          for attempt in {1..30}; do
+            if [ "$(docker inspect -f '{{.State.Health.Status}}' home-control-smoke)" = healthy ]; then break; fi
+            sleep 2
+          done
+          docker exec -i home-control-smoke python - --expect-disabled < scripts/container_smoke.py

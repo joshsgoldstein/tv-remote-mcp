@@ -8,11 +8,10 @@ import json
 import os
 import secrets
 from pathlib import Path
-from typing import Literal
 from urllib.parse import urlsplit
 
 import uvicorn
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, ValidationError
 from starlette.applications import Starlette
 from starlette.concurrency import run_in_threadpool
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -23,32 +22,10 @@ from starlette.staticfiles import StaticFiles
 
 from .config import Settings
 from .control import Controller
+from .home import Home, create_home
+from .integrations.samsung import Action
 
 STATIC = Path(__file__).parent / "static"
-
-
-class Action(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
-    action: Literal[
-        "pair",
-        "key",
-        "power",
-        "text",
-        "apps",
-        "launch",
-        "art_status",
-        "art_mode",
-        "art_list",
-        "art_select",
-    ]
-    key: str = ""
-    times: int = Field(default=1, ge=1, le=20)
-    power: Literal["on", "off", "toggle"] = "on"
-    text: str = Field(default="", max_length=500)
-    app_id: str = Field(default="", max_length=128)
-    app_type: Literal["DEEP_LINK", "NATIVE_LAUNCH"] = "DEEP_LINK"
-    enabled: bool = False
-    content_id: str = Field(default="", max_length=128)
 
 
 class Switch(BaseModel):
@@ -121,8 +98,12 @@ def create_app(
     allowed_hosts: set[str] | None = None,
     access_token: str | None = None,
     external_origin: str | None = None,
+    home: Home | None = None,
 ) -> Starlette:
     control = controller or Controller()
+    hub = home or create_home(control)
+    if home is not None:
+        control = Controller(home.store)
 
     async def index(request):
         return FileResponse(STATIC / "index.html")
@@ -131,7 +112,13 @@ def create_app(
         settings = await run_in_threadpool(control.store.load)
         tvs = await run_in_threadpool(control.list_tvs)
         return JSONResponse(
-            {"subnet": settings.subnet, "controls_enabled": settings.controls_enabled, "tvs": tvs}
+            {
+                "subnet": settings.subnet,
+                "controls_enabled": settings.controls_enabled,
+                "tvs": tvs,
+                "devices": await run_in_threadpool(hub.devices),
+                "integrations": hub.catalog(),
+            }
         )
 
     async def network(request):
@@ -166,20 +153,34 @@ def create_app(
     async def action(request):
         data = Action.model_validate(await body(request))
         tv_id = request.path_params["tv_id"]
-        operations = {
-            "pair": (control.pair, (tv_id,)),
-            "key": (control.key, (tv_id, data.key, data.times)),
-            "power": (control.power, (tv_id, data.power)),
-            "text": (control.text, (tv_id, data.text)),
-            "apps": (control.apps, (tv_id,)),
-            "launch": (control.launch, (tv_id, data.app_id, data.app_type)),
-            "art_status": (control.art_status, (tv_id,)),
-            "art_mode": (control.set_art_mode, (tv_id, data.enabled)),
-            "art_list": (control.list_art, (tv_id,)),
-            "art_select": (control.select_art, (tv_id, data.content_id)),
-        }
-        func, args = operations[data.action]
-        return JSONResponse(await run_in_threadpool(func, *args))
+        parameters = data.model_dump(exclude={"action"}, exclude_unset=True)
+        return JSONResponse(
+            await run_in_threadpool(hub.execute, f"samsung:{tv_id}", data.action, parameters)
+        )
+
+    async def device_switch(request):
+        data = Switch.model_validate(await body(request))
+        return JSONResponse(
+            await run_in_threadpool(hub.set_enabled, request.path_params["device_id"], data.enabled)
+        )
+
+    async def device_status(request):
+        return JSONResponse(await run_in_threadpool(hub.status, request.path_params["device_id"]))
+
+    async def device_action(request):
+        payload = await body(request)
+        action = payload.pop("action", None)
+        if not isinstance(action, str):
+            raise ValueError("Provide an action from this device's advertised actions")
+        return JSONResponse(
+            await run_in_threadpool(hub.execute, request.path_params["device_id"], action, payload)
+        )
+
+    async def integration_discover(request):
+        await body(request)
+        return JSONResponse(
+            await run_in_threadpool(hub.discover, request.path_params["integration_id"], True)
+        )
 
     async def bad_input(request, exc):
         if isinstance(exc, ValidationError):
@@ -190,7 +191,7 @@ def create_app(
 
     async def unavailable(request, exc):
         message = (
-            str(exc) if isinstance(exc, RuntimeError) else "TV or local storage is unavailable"
+            str(exc) if isinstance(exc, RuntimeError) else "Device or local storage is unavailable"
         )
         return JSONResponse({"error": message}, status_code=503)
 
@@ -198,6 +199,14 @@ def create_app(
         routes=[
             Route("/", index),
             Route("/api/state", state),
+            Route("/api/devices/{device_id}/controls", device_switch, methods=["POST"]),
+            Route("/api/devices/{device_id}/status", device_status),
+            Route("/api/devices/{device_id}/action", device_action, methods=["POST"]),
+            Route(
+                "/api/integrations/{integration_id}/discover",
+                integration_discover,
+                methods=["POST"],
+            ),
             Route("/api/network", network, methods=["POST"]),
             Route("/api/controls", switch, methods=["POST"]),
             Route("/api/tvs/{tv_id}/controls", switch, methods=["POST"]),
@@ -218,7 +227,7 @@ def create_app(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Local web control panel for Samsung TVs")
+    parser = argparse.ArgumentParser(description="Home Control: a local smart-home control panel")
     parser.add_argument("--host", default="127.0.0.1", help="Bind address; default: localhost only")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument(

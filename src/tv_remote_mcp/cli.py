@@ -6,13 +6,20 @@ import os
 import sys
 
 from .control import Controller
+from .home import create_home
 
 
 def main() -> None:
     os.umask(0o077)
-    parser = argparse.ArgumentParser(description="Samsung TV setup and diagnostics")
+    parser = argparse.ArgumentParser(description="Home Control setup and diagnostics")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("list")
+    sub.add_parser("devices")
+    sub.add_parser("integrations")
+    sub.add_parser("device-status").add_argument("device_id")
+    generic_scan = sub.add_parser("discover-devices")
+    generic_scan.add_argument("integration_id")
+    generic_scan.add_argument("--save", action="store_true")
     scan = sub.add_parser("discover")
     scan.add_argument("--save", action="store_true")
     for command in ("status", "pair", "art-status"):
@@ -26,15 +33,27 @@ def main() -> None:
     key.add_argument("--times", type=int, default=1)
     args = parser.parse_args()
     control = Controller()
+    home = create_home(control)
     try:
-        if args.command == "list":
+        if args.command == "devices":
+            result = home.devices()
+        elif args.command == "integrations":
+            result = home.catalog()
+        elif args.command == "device-status":
+            result = home.status(args.device_id)
+        elif args.command == "discover-devices":
+            result = home.discover(args.integration_id, args.save)
+        elif args.command == "list":
             result = control.list_tvs()
         elif args.command == "discover":
             result = control.discover(args.save)
         elif args.command in ("enable", "disable"):
-            result = control.store.set_enabled(
-                args.command == "enable", None if args.tv_id == "all" else args.tv_id
-            )
+            if ":" in args.tv_id:
+                result = home.set_enabled(args.tv_id, args.command == "enable")
+            else:
+                result = control.store.set_enabled(
+                    args.command == "enable", None if args.tv_id == "all" else args.tv_id
+                )
         elif args.command == "status":
             result = control.status(args.tv_id)
         elif args.command == "pair":

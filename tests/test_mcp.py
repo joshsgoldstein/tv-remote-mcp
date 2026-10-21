@@ -29,11 +29,27 @@ def test_stdio_tools_and_empty_inventory(tmp_path):
                 await session.initialize()
                 tools = await session.list_tools()
                 names = {tool.name for tool in tools.tools}
-                assert len(names) == 15
-                assert {"list_tvs", "pair_tv", "set_art_mode", "upload_artwork"} <= names
+                assert len(names) == 20
+                assert {
+                    "list_tvs",
+                    "pair_tv",
+                    "set_art_mode",
+                    "upload_artwork",
+                    "list_devices",
+                    "device_action",
+                    "list_integrations",
+                } <= names
                 inventory = await session.call_tool("list_tvs", {})
                 assert not inventory.isError
                 assert inventory.structuredContent == {"result": []}
+                devices = await session.call_tool("list_devices", {})
+                assert devices.structuredContent == {"result": []}
+                catalog = await session.call_tool("list_integrations", {})
+                assert catalog.structuredContent["result"][0]["id"] == "samsung"
+                planned = await session.call_tool(
+                    "discover_devices", {"integration_id": "lg_webos"}
+                )
+                assert planned.isError
                 bad_key = await session.call_tool(
                     "press_key", {"tv_id": "unused", "key": "KEY_FACTORY"}
                 )

@@ -1,14 +1,44 @@
-# Samsung TV Remote MCP
+<p align="center">
+  <img src="docs/assets/banner.svg" alt="Home Control — Your home. One control plane." width="100%">
+</p>
 
-Control Samsung TVs and The Frame from a small **web control panel** or an MCP-compatible assistant. Run it on
-your **laptop or an always-on computer/server connected to the same home network
-as your TVs**. Home Wi-Fi or wired Ethernet both work. SSH is not required.
+<p align="center">
+  <a href="https://github.com/joshsgoldstein/tv-remote-mcp/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/joshsgoldstein/tv-remote-mcp/ci.yml?branch=main&amp;style=flat-square&amp;label=build" alt="Build status"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-171717?style=flat-square" alt="MIT license"></a>
+  <a href="#requirements"><img src="https://img.shields.io/badge/Python-3.10%2B-171717?style=flat-square" alt="Python 3.10 and newer"></a>
+  <a href="docs/DOCKER.md"><img src="https://img.shields.io/badge/deploy-Docker-171717?style=flat-square" alt="Docker deployment"></a>
+</p>
 
-**Status: early release.** Discovery, status reads, and the MCP connection have been
-verified with a 2025 Samsung Frame. Remote buttons, app launching, Wake-on-LAN,
-and Art Mode controls are implemented and covered by mocked tests, but still
-await live verification after on-screen pairing. Model compatibility reports
-are welcome.
+<p align="center">
+  <a href="#quick-start"><strong>Get started</strong></a> ·
+  <a href="docs/DOCKER.md">Docker</a> ·
+  <a href="docs/AGENT_SETUP.md">Agent setup</a> ·
+  <a href="docs/INTEGRATIONS.md">Integrations</a> ·
+  <a href="CONTRIBUTING.md">Contribute</a>
+</p>
+
+**Home Control is an open-source control plane for your smart home.** Manage
+devices through a web dashboard or an MCP-compatible assistant, with shared
+inventory, device-specific controls, and persistent kill switches. Run it on a
+laptop or an always-on computer on your home network.
+
+The platform is built around **integrations and capabilities**, so TVs,
+thermostats, lights, and other devices can share one interface while keeping
+their own protocols and authorization. **Samsung TVs and The Frame are the first
+implemented integration.** LG, Sony, and ecobee adapters are planned.
+
+<p align="center">
+  <img src="docs/control-panel.png" alt="Home Control dashboard showing sample devices, integration selection, remote controls, and kill switches" width="100%">
+  <br><sub>Dashboard preview with sample devices. Available controls depend on the installed integration and device.</sub>
+</p>
+
+| One dashboard | Assistant-ready | You stay in control |
+| --- | --- | --- |
+| Discover devices and show controls based on capabilities. | Shared device tools, parameter schemas, and an agent setup runbook. | Persistent device/master kill switches enforced in the backend. |
+
+> **Early release:** Samsung discovery, status, and MCP connectivity have been
+> checked on hardware. Physical remote, apps, wake, and Art Mode operations still
+> await verification after on-screen pairing. Other integrations are not yet implemented.
 
 ## Let your assistant set it up
 
@@ -16,9 +46,10 @@ Give your coding assistant this prompt:
 
 > Set up https://github.com/joshsgoldstein/tv-remote-mcp for me. Read AGENTS.md
 > and docs/AGENT_SETUP.md, install it on my laptop or an available always-on
-> home computer, open the web panel, find my Samsung TVs, and connect my MCP
+> home computer, open the device dashboard, check available integrations,
+> discover devices using an implemented integration, and connect my MCP
 > client if I have one. Preserve existing settings. Tell me when to press Allow
-> on the TV, and leave pairing pending if I'm not there. Show me the device
+> on the device, and leave pairing pending if I'm not there. Show me the device
 > and master kill switches. Don't make the panel publicly accessible.
 
 The assistant needs permission to run commands on the chosen computer. You only
@@ -30,29 +61,32 @@ verification, and what to do when someone is away from home.
 
 ```mermaid
 flowchart LR
-    A[Assistant / MCP client] --> B[Shared controller on home computer]
-    W[Web control panel] --> B
-    B --> K[Persistent device and master kill switches]
-    K -->|Home Wi-Fi or Ethernet| C[Samsung TV]
-    K -->|Home Wi-Fi or Ethernet| D[The Frame]
+    A[Web dashboard] --> H[Home Control: inventory and capabilities]
+    B[Assistant / MCP] --> H
+    H --> K[Shared device and master kill switches]
+    K --> S[Samsung adapter: implemented]
+    K -.-> L[LG / Sony adapters: planned]
+    K -.-> D[Thermostats / lights / other adapters: future]
+    S --> T[Samsung TVs and The Frame]
 ```
 
-The assistant calls named tools such as `press_key` or `set_art_mode`. The server
-validates the TV ID and command, checks the TV's identity, and uses
-[samsungtvws](https://github.com/xchwarze/samsung-tv-ws-api) to communicate with
-it on the local network. Power-on sends a Wake-on-LAN packet. Discovery and basic
-status use Samsung's device-information endpoint.
+The dashboard and assistant use qualified IDs such as `samsung:frame`, discover
+which capabilities a device offers, and route actions through its adapter.
+The shared command gate checks the saved kill switches before adapter execution.
+Each adapter owns its protocol, authentication, validation, and supported actions.
 
-The [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk/tree/v1.x)
-provides tool schemas and stdio transport. Your MCP client launches the server
-as a local process. No Samsung cloud account, public HTTP endpoint, or SSH
-connection is required for this setup.
+For Samsung, [samsungtvws](https://github.com/xchwarze/samsung-tv-ws-api) handles
+local remote/Art Mode channels, with device information for discovery/status and
+Wake-on-LAN for power-on. The [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk/tree/v1.x)
+provides tool schemas and stdio transport. No public HTTP endpoint is required.
+
 
 ## Requirements
 
-- A Samsung Tizen-era TV with local remote-control support; Art Mode needs The Frame.
+- A device supported by an implemented integration. Currently: Samsung Tizen-era
+  TVs with local control; Art Mode needs The Frame. LG, Sony, and ecobee are planned.
 - A Linux or macOS laptop, desktop, or server with Python 3.10+ and [uv](https://docs.astral.sh/uv/).
-- **The machine running this server must be on the same home network as the TVs.**
+- **The machine running this server must be on the same home network as its local devices.**
   A laptop connected to your home Wi-Fi works. For ongoing availability, use a
   computer/server that stays powered on and connected. Guest-network isolation
   or separate VLANs may prevent the devices from communicating.
@@ -62,6 +96,9 @@ The Python server uses POSIX file locks; Windows server hosting is not supported
 Older Orsay-only Samsung TVs are not implemented.
 
 ## Quick start
+
+Choose [Docker Compose](docs/DOCKER.md) for a container, or the native setup below.
+If you prefer to hand setup to an assistant, use the [ready-to-paste prompt](#let-your-assistant-set-it-up).
 
 Run these commands on the laptop or computer that is connected to the TV's home
 network:
@@ -75,25 +112,22 @@ uv sync --locked
 ### Open the web panel
 
 ```sh
-uv run --locked tv-remote-web
+uv run --locked home-control-web
 ```
 
 Open **http://127.0.0.1:8765** on the same computer. Keep that command running;
 Ctrl+C stops the panel. No frontend build or cloud account is required.
 
-Use **Home network** to set your subnet, **Find televisions** to discover TVs,
-and **Pair television** when someone is ready to choose Allow on the TV.
-The panel includes a directional remote, volume, channels, playback, power,
+Choose an available integration under **Discover with**, then use **Home network**
+to set your subnet and **Find devices** to discover its devices. For Samsung,
+use **Pair television** when someone is ready to choose Allow on the TV.
+For a television, the panel includes a directional remote, volume, channels, playback, power,
 app launching, text entry, and Frame Art Mode with artwork selection.
 It shares saved TVs and pairing tokens with MCP.
 
-![Control panel with sample TVs](docs/control-panel.png)
-
-*Preview uses synthetic TVs. Actual controls depend on pairing and firmware.*
-
 ### Device kill switches
 
-**Disable device** blocks one TV. **Disable all controls** blocks every TV,
+**Disable device** blocks one device. **Disable all controls** blocks every device,
 including newly discovered ones, until the master switch is re-enabled.
 Both are saved on disk and enforced by the shared backend for web, CLI, and MCP
 commands, including pairing, Wake-on-LAN, and Art Mode. Rediscovery and restarts
@@ -101,15 +135,15 @@ preserve them. Enabling the master switch does not enable a disabled device.
 The assistant has no MCP tool to re-enable either switch.
 
 Inventory, discovery, and basic status reads remain available. These switches
-cannot recall an in-flight command, cut physical power, or block other TV apps.
+cannot recall an in-flight command, cut physical power, or block other device apps.
 You can also operate them locally:
 
 ```sh
-uv run tv-remote disable all
-uv run tv-remote disable frame
+uv run home-control disable all
+uv run home-control disable samsung:frame
 # Only when you want control restored:
-uv run tv-remote enable all
-uv run tv-remote enable frame
+uv run home-control enable all
+uv run home-control enable samsung:frame
 ```
 
 ### Discover and pair from the terminal
@@ -157,7 +191,7 @@ On the same computer, configure your MCP client to launch the server. For Codex,
 replace the example path with the absolute path to your checkout:
 
 ```sh
-codex mcp add samsung_tvs -- uv --directory /absolute/path/to/tv-remote-mcp run --locked tv-remote-mcp
+codex mcp add home_control -- uv --directory /absolute/path/to/tv-remote-mcp run --locked home-control-mcp
 ```
 
 Alternatively, merge [examples/codex.toml](examples/codex.toml) into your Codex
@@ -171,7 +205,8 @@ A sleeping laptop or one that leaves your home network cannot control the TVs.
 
 Example requests:
 
-- “List my TVs and check the Frame's status.”
+- “List my devices and available integrations.”
+- “Check the Frame's status.”
 - “Lower the bedroom TV's volume three steps.”
 - “Put the Frame into Art Mode.”
 - “List the Frame's artwork and display this content ID.”
@@ -192,7 +227,7 @@ authorized, get that computer's actual MagicDNS hostname from `tailscale status`
 Replace `your-home-host.your-tailnet.ts.net` below with that hostname:
 
 ```sh
-uv run tv-remote-web --external-origin https://your-home-host.your-tailnet.ts.net
+uv run home-control-web --external-origin https://your-home-host.your-tailnet.ts.net
 # In another terminal on the same computer:
 tailscale serve --bg --https=443 http://127.0.0.1:8765
 ```
@@ -214,17 +249,34 @@ not a committed config or URL. The browser requests it and retains it only in
 memory. Plain LAN HTTP does not encrypt this token; prefer private HTTPS above.
 Never expose this service through router port forwarding or a public proxy.
 
-## Future devices
+## Integrations
 
-Samsung TVs are the only supported devices today. The web/MCP/shared-controller
-structure can be extended with additional integrations, such as ecobee, but
-these would need their own authorization, API support, device controls, and
-backend kill-switch enforcement. No thermostat integration is included yet.
+| Integration | Status | Connection |
+| --- | --- | --- |
+| Samsung TVs / The Frame | Implemented; live control verification pending pairing | Local WebSocket remote / Art Mode |
+| LG webOS | Planned | Separate webOS adapter and pairing |
+| Sony BRAVIA | Planned | Separate, model-dependent Sony API adapter |
+| ecobee thermostats | Planned | Separate thermostat authorization and capabilities |
+| Lights, plugs, other devices | Future integrations | Device/protocol-specific adapters |
+
+`list_integrations` distinguishes available adapters from planned entries and
+returns action parameter schemas. `list_devices` returns each device's category,
+capabilities, supported actions, and enabled/paired state. The browser uses the
+same registry; unsupported actions are rejected before contacting a device.
+
+See [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) for the implemented adapter
+contract, vendor references, testing requirements, and how to add a device type.
+No LG, Sony, or thermostat commands are implemented yet.
 
 ## Tools
 
 | Tool | Purpose |
 | --- | --- |
+| `list_integrations` | Available/planned adapters and action parameter schemas |
+| `list_devices` | Cross-integration inventory with qualified IDs and capabilities |
+| `discover_devices` | Discover through one available integration; optionally save |
+| `device_status` | Read status through the device's adapter |
+| `device_action` | Run an advertised action through the shared command gate |
 | `list_tvs` | Saved IDs, models, addresses, and token availability |
 | `discover_tvs` | Discover TVs; `save=True` registers them and refreshes addresses |
 | `tv_status` | Read reachability, identity, and reported power without pairing |
@@ -241,6 +293,17 @@ backend kill-switch enforcement. No thermostat integration is included yet.
 | `select_artwork` | Display existing artwork |
 | `upload_artwork` | Upload a staged PNG/JPEG and return its content ID |
 
+The remaining TV-specific tools are compatibility conveniences for the Samsung
+adapter. New integrations use the shared device interface. For example:
+
+```text
+list_devices()
+device_action(device_id="samsung:frame", action="apps", parameters={})
+```
+
+Look up `list_integrations` for the required parameters and `list_devices` for
+supported actions. Pairing is still required for commands that need authorization.
+
 ### Upload artwork
 
 Place an image in the artwork directory on the computer running the server:
@@ -256,6 +319,10 @@ Then call `upload_artwork(tv_id="frame", filename="photo.jpg")`, followed by
 Uploading does not automatically display or delete artwork.
 
 ## Configuration and behavior
+
+The app uses `home-control`, `home-control-web`, and `home-control-mcp` commands.
+The original `tv-remote*` commands, repository/package name, config paths, and TV
+IDs remain compatible with existing installations. No token migration is needed.
 
 | Setting | Default |
 | --- | --- |

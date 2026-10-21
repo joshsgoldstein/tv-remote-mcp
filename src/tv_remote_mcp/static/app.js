@@ -29,9 +29,9 @@ function icon(name) {
   return span;
 }
 document.querySelectorAll('[data-icon]').forEach(node => node.append(icon(node.dataset.icon)));
-let tvs = [], selected = null, busy = false, accessToken = '', activity = [];
+let devices = [], selected = null, busy = false, accessToken = '', activity = [];
 let statusSequence = 0, controlsEnabled = true;
-const current = () => tvs.find(tv => tv.id === selected);
+const current = () => devices.find(tv => tv.id === selected);
 function notice(text, error = false) {
   const node = $('message'); node.textContent = text; node.hidden = !text;
   node.classList.toggle('error', error);
@@ -61,22 +61,22 @@ function updateControls() {
     if (button.closest('dialog')) return;
     button.disabled = busy;
   });
-  document.querySelectorAll('[data-paired]').forEach(node => node.disabled = busy || !controlsEnabled || tv?.enabled === false || !tv || (!tv.token_saved && tv.port !== 8001));
-  $('wake').disabled = busy || !controlsEnabled || tv?.enabled === false || !tv?.mac;
+  document.querySelectorAll('[data-paired]').forEach(node => node.disabled = busy || !controlsEnabled || tv?.enabled === false || !tv || !tv.paired);
+  $('wake').disabled = busy || !controlsEnabled || tv?.enabled === false || !tv?.capabilities.includes('wake');
   ['pair-main', 'pair-again'].forEach(id => $(id).disabled = busy || !controlsEnabled || tv?.enabled === false);
   // Kill switches remain usable while a slow command is in flight.
   $('master-switch').disabled = false; $('device-switch').disabled = !tv;
-  $('wake').title = tv?.mac ? 'Send a Wake-on-LAN packet' : 'No MAC address saved; discover this TV while powered on';
+  $('wake').title = tv?.capabilities.includes('wake') ? 'Send a Wake-on-LAN packet' : 'No MAC address saved; discover this TV while powered on';
 }
 function renderList() {
-  $('tv-count').textContent = String(tvs.length);
-  if (!tvs.length) {const p = document.createElement('p'); p.className = 'muted small'; p.textContent = 'No televisions added yet.'; $('tv-list').replaceChildren(p); return;}
-  $('tv-list').replaceChildren(...tvs.map(tv => {
+  $('tv-count').textContent = String(devices.length);
+  if (!devices.length) {const p = document.createElement('p'); p.className = 'muted small'; p.textContent = 'No devices added yet.'; $('tv-list').replaceChildren(p); return;}
+  $('tv-list').replaceChildren(...devices.map(tv => {
     const button = document.createElement('button'); button.className = `tv-item${tv.id === selected ? ' selected' : ''}`;
     button.setAttribute('aria-current', tv.id === selected ? 'true' : 'false');
     const graphic = icon('tv'); graphic.className = 'tv-icon';
     const text = document.createElement('span'), name = document.createElement('strong'), detail = document.createElement('small');
-    name.textContent = tv.name; detail.textContent = tv.enabled === false ? 'Controls disabled' : tv.token_saved ? 'Token saved' : 'Ready to pair';
+    name.textContent = tv.name; detail.textContent = tv.enabled === false ? 'Controls disabled' : `${tv.manufacturer} · ${tv.category}`;
     text.append(name, detail); button.append(graphic, text); button.addEventListener('click', () => select(tv.id)); return button;
   }));
 }
@@ -91,32 +91,45 @@ function select(id, refresh = true) {
   $('control-state').textContent = tv.enabled === false ? 'Device controls disabled' : controlsEnabled ? 'Device controls enabled' : 'All controls disabled';
   $('device-switch').textContent = tv.enabled === false ? 'Enable device' : 'Disable device';
   $('breadcrumb-tv').textContent = tv.name; $('device-name').textContent = tv.name;
-  $('device-kind').textContent = tv.frame ? 'SAMSUNG · THE FRAME' : 'SAMSUNG TELEVISION';
-  $('device-model').textContent = tv.model || 'Samsung Smart TV'; $('device-address').textContent = tv.host;
-  $('device-power').textContent = 'Unknown'; $('device-pairing').textContent = tv.token_saved ? 'Saved on this computer' : 'Not saved';
+  $('device-kind').textContent = `${tv.manufacturer} · ${tv.category}`.toUpperCase();
+  $('remote-brand').textContent = tv.manufacturer;
+  $('remote-panel').hidden = !tv.capabilities.includes('remote');
+  $('generic-device-note').hidden = tv.capabilities.includes('remote');
+  $('apps-panel').hidden = !tv.capabilities.includes('apps') && !tv.capabilities.includes('text');
+  $('launch-form').hidden = !tv.capabilities.includes('apps');
+  $('apps-list').hidden = !tv.capabilities.includes('apps');
+  $('text-form').hidden = !tv.capabilities.includes('text');
+  $('pair-again').hidden = !tv.capabilities.includes('pairing');
+  $('pairing-description').textContent = tv.details.pairing_message || 'Authorize this connection using the instructions for this device’s integration.';
+  $('device-model').textContent = tv.model || tv.category; $('device-address').textContent = tv.details.host || '—';
+  $('device-power').textContent = 'Unknown'; $('device-pairing').textContent = tv.paired ? 'Saved on this computer' : 'Not saved';
   $('connection-status').textContent = 'Not checked'; $('connection-status').className = 'pill';
-  $('last-checked').textContent = 'Status not checked yet'; $('pairing-banner').hidden = tv.token_saved;
-  $('pair-again').firstChild.textContent = tv.token_saved ? 'Pair again' : 'Pair television';
-  $('remote-caption').textContent = !controlsEnabled || tv.enabled === false ? 'Controls disabled' : tv.token_saved ? 'Ready for commands' : 'Pairing needed';
-  $('remote-help').textContent = !controlsEnabled || tv.enabled === false ? 'A kill switch is blocking device commands.' : tv.token_saved ? 'Commands are sent directly over your home network.' : 'Pair your TV to unlock the remote.';
-  $('art-panel').hidden = !tv.frame; resetArt();
+  $('last-checked').textContent = 'Status not checked yet'; $('pairing-banner').hidden = tv.paired || !tv.capabilities.includes('pairing');
+  $('pair-again').firstChild.textContent = tv.paired ? 'Pair again' : 'Pair television';
+  $('remote-caption').textContent = !controlsEnabled || tv.enabled === false ? 'Controls disabled' : tv.paired ? 'Ready for commands' : 'Pairing needed';
+  $('remote-help').textContent = !controlsEnabled || tv.enabled === false ? 'A kill switch is blocking device commands.' : tv.paired ? 'Commands are sent directly over your home network.' : 'Pair your TV to unlock the remote.';
+  $('art-panel').hidden = !tv.capabilities.includes('art'); resetArt();
   ['apps', 'artworks'].forEach(name => {$(name).replaceChildren(); $(name).hidden = true;});
   updateControls();
   if (refresh) refreshStatus().catch(error => notice(error.message, true));
 }
 async function loadState(refresh = true) {
-  const state = await api('/api/state'); tvs = state.tvs; controlsEnabled = state.controls_enabled !== false;
+  const state = await api('/api/state'); devices = state.devices; controlsEnabled = state.controls_enabled !== false;
+  const previousIntegration = $('integration-select').value;
+  $('integration-select').replaceChildren(...state.integrations.filter(item => item.status === 'available').map(item => {const option = document.createElement('option'); option.value = item.id; option.textContent = item.name; return option;}));
+  if (state.integrations.some(item => item.id === previousIntegration && item.status === 'available')) $('integration-select').value = previousIntegration;
+  $('integration-list').replaceChildren(...state.integrations.map(item => {const row = document.createElement('p'); row.textContent = `${item.name} · ${item.status}`; return row;}));
   $('master-switch').textContent = controlsEnabled ? 'Disable all controls' : 'Enable all controls';
   $('master-state').textContent = controlsEnabled ? 'Master switch: enabled' : 'Master switch: disabled';
   $('subnet').value = state.subnet;
-  const id = tvs.some(tv => tv.id === selected) ? selected : tvs[0]?.id;
+  const id = devices.some(tv => tv.id === selected) ? selected : devices[0]?.id;
   select(id || null, refresh); return state;
 }
 async function refreshStatus() {
   const id = selected, sequence = ++statusSequence;
   if (!id) return;
   $('connection-status').textContent = 'Checking…';
-  const state = await api(`/api/tvs/${encodeURIComponent(id)}/status`);
+  const state = await api(`/api/devices/${encodeURIComponent(id)}/status`);
   if (id !== selected || sequence !== statusSequence) return;
   const matched = state.reachable && state.identity_matches !== false;
   $('connection-status').textContent = matched ? 'Reachable' : state.reachable ? 'Identity changed' : 'Not reachable';
@@ -137,13 +150,13 @@ async function run(label, operation, message = null) {
 }
 function command(data, label, message) {
   const id = selected; if (!id) return Promise.resolve(null);
-  return run(label, () => api(`/api/tvs/${encodeURIComponent(id)}/action`, data), message);
+  return run(label, () => api(`/api/devices/${encodeURIComponent(id)}/action`, data), message);
 }
 async function discover() {
   const result = await run('Network scan', async () => {
-    const found = await api('/api/discover', {}); await loadState(false); return found;
-  }, 'Looking for Samsung TVs on your network. This can take around 20 seconds.');
-  if (result) notice(result.found.length ? `Found ${result.found.length} television${result.found.length === 1 ? '' : 's'}. Choose one to pair or control.` : 'No TVs responded. Turn them on, check the home subnet, and try again.');
+    const found = await api(`/api/integrations/${encodeURIComponent($('integration-select').value)}/discover`, {}); await loadState(false); return found;
+  }, 'Looking for devices using the selected integration. This can take around 20 seconds.');
+  if (result) notice(result.found.length ? `Found ${result.found.length} device${result.found.length === 1 ? '' : 's'}. Choose one to pair or control.` : 'No devices responded. Turn them on, check the home subnet, and try again.');
   if (current()) refreshStatus().catch(error => notice(error.message, true));
 }
 async function setSwitch(path, enabled) {
@@ -151,14 +164,14 @@ async function setSwitch(path, enabled) {
   catch (error) {notice(error.message, true);}
 }
 $('master-switch').addEventListener('click', () => setSwitch('/api/controls', !controlsEnabled));
-$('device-switch').addEventListener('click', () => {const tv = current(); if (tv) setSwitch(`/api/tvs/${encodeURIComponent(tv.id)}/controls`, tv.enabled === false);});
+$('device-switch').addEventListener('click', () => {const tv = current(); if (tv) setSwitch(`/api/devices/${encodeURIComponent(tv.id)}/controls`, tv.enabled === false);});
 $('discover').addEventListener('click', discover); $('empty-discover').addEventListener('click', discover);
 $('refresh').addEventListener('click', () => run('Status refresh', refreshStatus));
 $('network-form').addEventListener('submit', event => {
   event.preventDefault(); run('Network saved', () => api('/api/network', {subnet: $('subnet').value.trim()}));
 });
 async function pair() {
-  const result = await command({action: 'pair'}, 'TV pairing', 'Look at your TV and choose Allow for Samsung TV Remote MCP. Waiting up to 25 seconds…');
+  const result = await command({action: 'pair'}, 'TV pairing', current()?.details.pairing_message || 'Follow the authorization instructions for your device…');
   if (result) {await loadState().catch(error => notice(error.message, true)); notice(result.token_saved ? 'Pairing token saved. Your remote is ready.' : 'Connected, but no token was saved. Check your TV authorization settings.');}
 }
 $('pair-main').addEventListener('click', pair); $('pair-again').addEventListener('click', pair);

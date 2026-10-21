@@ -67,7 +67,7 @@ def main():
         print("Initialized:", result["serverInfo"])
         send({"method": "notifications/initialized"})
         tools = request(2, "tools/list", {})["tools"]
-        assert len(tools) == 15, [tool["name"] for tool in tools]
+        assert len(tools) == 20, [tool["name"] for tool in tools]
         print("Tools:", ", ".join(tool["name"] for tool in tools))
         calls = [(3, "list_tvs", {})]
         if args.tv_id:

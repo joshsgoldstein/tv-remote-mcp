@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "samsung_tvs": {
+    "home_control": {
       "command": "uv",
-      "args": ["--directory", "/absolute/path/to/tv-remote-mcp", "run", "--locked", "tv-remote-mcp"]
+      "args": ["--directory", "/absolute/path/to/tv-remote-mcp", "run", "--locked", "home-control-mcp"]
     }
   }
 }

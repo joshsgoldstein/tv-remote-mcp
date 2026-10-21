@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "tv-remote-mcp"
 version = "0.1.0"
-description = "Samsung TV and The Frame controls over MCP, hosted on your home network"
+description = "Home Control: an extensible smart-home control plane with web UI, MCP, and device kill switches"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -18,6 +18,9 @@ Repository = "https://github.com/joshsgoldstein/tv-remote-mcp"
 Issues = "https://github.com/joshsgoldstein/tv-remote-mcp/issues"
 
 [project.scripts]
+home-control-mcp = "tv_remote_mcp.server:main"
+home-control = "tv_remote_mcp.cli:main"
+home-control-web = "tv_remote_mcp.web:main"
 tv-remote-mcp = "tv_remote_mcp.server:main"
 tv-remote = "tv_remote_mcp.cli:main"
 tv-remote-web = "tv_remote_mcp.web:main"

@@ -7,19 +7,53 @@ from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 
 from .control import KEYS, Controller
+from .home import create_home
 
 mcp = FastMCP(
-    "Samsung TV Remote MCP",
+    "Home Control MCP",
     instructions=(
-        "Controls configured Samsung TVs from the home LAN. Start with list_tvs. "
+        "Smart-home control plane. Start with list_integrations and list_devices. "
+        "Only available integrations work; planned entries are not implemented. "
+        "Use capabilities and actions advertised by each device. Respect all kill switches. "
         "Use explicit TV IDs. Only pair_tv should trigger first-time pairing. "
         "Command sent is not confirmation of visible state. Never retry a toggle blindly. "
         "The Frame's Art Mode is separate from standby power."
     ),
 )
 controller = Controller()
+home = create_home(controller)
 READ = ToolAnnotations(readOnlyHint=True, destructiveHint=False, openWorldHint=False)
 WRITE = ToolAnnotations(readOnlyHint=False, destructiveHint=False, openWorldHint=False)
+
+
+@mcp.tool(annotations=READ)
+def list_integrations() -> list[dict]:
+    """List available adapters and planned integrations. Planned adapters cannot be used."""
+    return home.catalog()
+
+
+@mcp.tool(annotations=READ)
+def list_devices() -> list[dict]:
+    """List devices across integrations with qualified IDs, capabilities, actions, and switch state."""
+    return home.devices()
+
+
+@mcp.tool(annotations=READ)
+def device_status(device_id: str) -> dict:
+    """Read status through the device's adapter using an ID from list_devices."""
+    return home.status(device_id)
+
+
+@mcp.tool(annotations=WRITE)
+def discover_devices(integration_id: str, save: bool = False) -> dict:
+    """Discover through one available integration. Does not pair. Save registers discovered devices."""
+    return home.discover(integration_id, save)
+
+
+@mcp.tool(annotations=WRITE)
+def device_action(device_id: str, action: str, parameters: dict) -> dict:
+    """Run an advertised device action through the shared kill-switch gate. Explicit pair action requires someone at the device; never use it merely to check status. Adapter validates parameters. For Samsung: key {key: home}, power {power: on/off/toggle}, apps {}, launch {app_id: ...}, text {text: ...}, art_mode {enabled: true/false}."""
+    return home.execute(device_id, action, parameters)
 
 
 @mcp.tool(annotations=READ)
