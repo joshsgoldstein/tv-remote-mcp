@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "samsung_tvs": {
+      "command": "/usr/bin/ssh",
+      "args": ["-T", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=3", "tv-home", "exec ~/tv-remote-mcp/.venv/bin/tv-remote-mcp"]
+    }
+  }
+}

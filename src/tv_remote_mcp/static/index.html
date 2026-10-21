@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>TV Remote — Home control</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='5' width='26' height='19' rx='4' fill='%23171717'/%3E%3Cpath d='M10 28h12' stroke='%23171717' stroke-width='2'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="TV Remote home"><span class="brand-icon" data-icon="tv"></span><span>TV Remote<span class="brand-sub">Your home, connected.</span></span></a>
+    <div class="nav-heading"><span>YOUR TELEVISIONS</span><span id="tv-count" class="count">0</span></div>
+    <nav id="tv-list" aria-label="Choose a television"><p class="muted small">Loading your TVs…</p></nav>
+    <button id="discover" class="button sidebar-add"><span data-icon="plus"></span>Find televisions</button>
+    <div class="sidebar-bottom">
+      <button id="master-switch" class="button">Disable all controls</button>
+      <p id="master-state" class="muted small">All controls enabled</p>
+      <details class="network-settings">
+        <summary><span data-icon="network"></span>Home network<span class="chevron" data-icon="down"></span></summary>
+        <form id="network-form">
+          <label for="subnet">Discovery subnet</label>
+          <input id="subnet" name="subnet" placeholder="192.168.1.0/24" required>
+          <button class="button" type="submit">Save network</button>
+          <p class="muted small">This computer and your TVs need to be on the same home network.</p>
+        </form>
+      </details>
+      <a class="sidebar-link" href="https://github.com/joshsgoldstein/tv-remote-mcp" target="_blank" rel="noreferrer"><span data-icon="code"></span>Open-source project<span data-icon="external"></span></a>
+      <div class="local-note"><span class="status-dot"></span>Runs on your network</div>
+    </div>
+  </aside>
+
+  <main>
+    <header class="topbar"><div class="breadcrumb">Home control<span>/</span><strong id="breadcrumb-tv">Televisions</strong></div><span class="pill"><span data-icon="network"></span>Local connection</span></header>
+    <div class="workspace">
+      <div id="message" class="message" role="status" aria-live="polite" hidden></div>
+      <section id="empty" class="empty" hidden>
+        <div class="empty-symbol" data-icon="tv"></div>
+        <span class="eyebrow">A REMOTE FOR YOUR HOME</span>
+        <h1>Your televisions.<br>One place to control them.</h1>
+        <p>Find Samsung TVs on your home network, pair once,<br class="desktop-only"> and put the remote a little closer.</p>
+        <button id="empty-discover" class="button primary"><span data-icon="search"></span>Find my televisions</button>
+        <ol class="setup-steps"><li><span>1</span>Connect to home Wi-Fi</li><li><span>2</span>Turn on your TV</li><li><span>3</span>Accept the pairing request</li></ol>
+      </section>
+
+      <section id="device" hidden>
+        <div class="device-heading"><div><span class="eyebrow" id="device-kind">SAMSUNG TELEVISION</span><h1 id="device-name"></h1><p class="muted" id="device-model"></p></div><button id="refresh" class="button"><span data-icon="refresh"></span>Refresh status</button></div>
+        <div class="pairing-banner" id="pairing-banner" hidden><span class="pairing-icon" data-icon="link"></span><div><strong>One little introduction.</strong><p>Pair this remote, then choose <b>Allow</b> on your TV. You only need to do this once unless access is revoked.</p></div><button id="pair-main" class="button primary">Pair television<span data-icon="right"></span></button></div>
+        <div class="control-safety"><div><strong id="control-state">Device controls enabled</strong><p class="muted small">Blocks web and assistant commands. It does not turn off the TV.</p></div><button id="device-switch" class="button">Disable device</button></div>
+        <div class="control-layout">
+          <section class="panel remote-panel">
+            <div class="panel-title"><h2>Remote control</h2><span class="small muted" id="remote-caption">Choose a television</span></div>
+            <div class="remote-surface">
+              <div class="remote-top"><button class="round-button" id="wake" aria-label="Wake television" title="Wake television"><span data-icon="power"></span></button><span class="remote-wordmark">SAMSUNG</span><button class="round-button" id="power-off" data-paired aria-label="Power off" title="Power off"><span data-icon="moon"></span></button></div>
+              <div class="remote-shortcuts"><button class="remote-key" data-key="home" data-paired><span data-icon="home"></span><span>Home</span></button><button class="remote-key" data-key="source" data-paired><span data-icon="input"></span><span>Source</span></button><button class="remote-key" data-key="back" data-paired><span data-icon="back"></span><span>Back</span></button></div>
+              <div class="dpad" role="group" aria-label="Directional controls"><button class="dpad-up" data-key="up" data-paired aria-label="Up"><span data-icon="up"></span></button><button class="dpad-left" data-key="left" data-paired aria-label="Left"><span data-icon="left"></span></button><button class="dpad-ok" data-key="enter" data-paired>OK</button><button class="dpad-right" data-key="right" data-paired aria-label="Right"><span data-icon="right"></span></button><button class="dpad-down" data-key="down" data-paired aria-label="Down"><span data-icon="down"></span></button></div>
+              <div class="rockers"><div class="rocker" role="group" aria-label="Volume"><button data-key="volume_up" data-paired aria-label="Volume up"><span data-icon="plus"></span></button><span>VOL</span><button data-key="volume_down" data-paired aria-label="Volume down"><span data-icon="minus"></span></button></div><button class="round-button mute" data-key="mute" data-paired aria-label="Toggle mute" title="Toggle mute"><span data-icon="mute"></span></button><div class="rocker" role="group" aria-label="Channel"><button data-key="channel_up" data-paired aria-label="Channel up"><span data-icon="up"></span></button><span>CH</span><button data-key="channel_down" data-paired aria-label="Channel down"><span data-icon="down"></span></button></div></div>
+              <div class="playback" role="group" aria-label="Playback"><button class="round-button" data-key="rewind" data-paired aria-label="Rewind"><span data-icon="rewind"></span></button><button class="round-button" data-key="play" data-paired aria-label="Play"><span data-icon="play"></span></button><button class="round-button" data-key="pause" data-paired aria-label="Pause"><span data-icon="pause"></span></button><button class="round-button" data-key="forward" data-paired aria-label="Fast forward"><span data-icon="forward"></span></button></div>
+            </div>
+            <p class="panel-footnote" id="remote-help">Pair your TV to unlock the remote.</p>
+          </section>
+          <div class="side-panels">
+            <section class="panel connection-panel"><div class="panel-title"><h2>Connection</h2><span id="connection-status" class="pill">Not checked</span></div><dl class="device-facts"><div><dt>Network address</dt><dd id="device-address" class="mono">—</dd></div><div><dt>TV power</dt><dd id="device-power">Unknown</dd></div><div><dt>Pairing token</dt><dd id="device-pairing">Not saved</dd></div></dl><div class="connection-actions"><button id="pair-again" class="text-button">Pair television<span data-icon="right"></span></button><span class="muted small" id="last-checked">Status not checked yet</span></div></section>
+            <section class="panel" id="art-panel" hidden><div class="panel-title"><h2><span data-icon="art"></span>Art Mode</h2><span class="pill">The Frame</span></div><p class="muted section-copy">Make a little room for art.</p><div class="art-controls"><span id="art-status">State not checked</span><div class="segmented"><button id="art-on" data-paired>On</button><button id="art-off" data-paired>Off</button></div></div><div class="row-actions"><button id="art-refresh" class="text-button" data-paired>Check state</button><button id="art-list" class="text-button" data-paired>Browse artwork<span data-icon="right"></span></button></div><div id="artworks" class="item-list" hidden></div></section>
+            <section class="panel"><div class="panel-title"><h2><span data-icon="apps"></span>Apps & text</h2><button id="apps-list" class="text-button" data-paired>Load apps</button></div><div id="apps" class="item-list" hidden></div><form id="launch-form" class="compact-form"><label for="app-id">Launch by app ID</label><div class="input-action"><input id="app-id" placeholder="Installed app ID" maxlength="128" data-paired required><button class="button" type="submit" data-paired>Open</button></div></form><form id="text-form" class="compact-form"><label for="tv-text">Type on your TV</label><div class="input-action"><input id="tv-text" placeholder="Select a text field on your TV first" maxlength="500" data-paired required><button class="button" type="submit" data-paired aria-label="Send text"><span data-icon="right"></span></button></div></form></section>
+          </div>
+        </div>
+        <section class="activity"><div class="activity-title"><h2>Recent activity</h2><span class="small muted">This browser session</span></div><ul id="activity-list"><li class="muted">Your actions will appear here.</li></ul></section>
+      </section>
+      <footer><span>TV Remote MCP</span><span>At home on your network.</span></footer>
+    </div>
+  </main>
+  <dialog id="auth-dialog"><form id="auth-form"><span class="eyebrow">HOME SERVER</span><h2>Connect to your remote</h2><p class="muted">This server requires an access token.</p><label for="access-token">Server access token</label><input id="access-token" type="password" autocomplete="off" required><p class="small muted">Kept in memory for this tab only.</p><button class="button primary" type="submit">Connect</button><p id="auth-error" class="error" role="alert"></p></form></dialog>
+  <dialog id="power-dialog"><form method="dialog"><h2>Turn off this TV?</h2><p class="muted">On The Frame, this sends a long power-button press to enter standby.</p><div class="dialog-actions"><button class="button" value="cancel">Cancel</button><button class="button primary" value="off">Power off</button></div></form></dialog>
+</body>
+</html>

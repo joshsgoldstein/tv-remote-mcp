@@ -1,0 +1,57 @@
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+
+from .control import Controller
+
+
+def main() -> None:
+    os.umask(0o077)
+    parser = argparse.ArgumentParser(description="Samsung TV setup and diagnostics")
+    sub = parser.add_subparsers(dest="command", required=True)
+    sub.add_parser("list")
+    scan = sub.add_parser("discover")
+    scan.add_argument("--save", action="store_true")
+    for command in ("status", "pair", "art-status"):
+        sub.add_parser(command).add_argument("tv_id")
+    for command in ("enable", "disable"):
+        switch = sub.add_parser(command)
+        switch.add_argument("tv_id", help="TV ID, or all for the master switch")
+    key = sub.add_parser("key")
+    key.add_argument("tv_id")
+    key.add_argument("key")
+    key.add_argument("--times", type=int, default=1)
+    args = parser.parse_args()
+    control = Controller()
+    try:
+        if args.command == "list":
+            result = control.list_tvs()
+        elif args.command == "discover":
+            result = control.discover(args.save)
+        elif args.command in ("enable", "disable"):
+            result = control.store.set_enabled(
+                args.command == "enable", None if args.tv_id == "all" else args.tv_id
+            )
+        elif args.command == "status":
+            result = control.status(args.tv_id)
+        elif args.command == "pair":
+            print(
+                "Select Allow for Samsung TV Remote MCP on the TV now (25 second timeout).",
+                file=sys.stderr,
+            )
+            result = control.pair(args.tv_id)
+        elif args.command == "art-status":
+            result = control.art_status(args.tv_id)
+        else:
+            result = control.key(args.tv_id, args.key, args.times)
+        print(json.dumps(result, indent=2))
+    except (ValueError, RuntimeError, OSError) as exc:
+        print(json.dumps({"error": str(exc)}), file=sys.stderr)
+        raise SystemExit(1) from None
+
+
+if __name__ == "__main__":
+    main()

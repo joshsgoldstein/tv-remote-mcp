@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+dist/
+.state/
+config.local.json
+*.token
+LOCAL_SETUP.md
+.env
+.env.*
+!.env.example
+.DS_Store
+*.egg-info/
+build/

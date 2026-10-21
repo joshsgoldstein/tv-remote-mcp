@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling>=1.26,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tv-remote-mcp"
+version = "0.1.0"
+description = "Samsung TV and The Frame controls over MCP, hosted on your home network"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["mcp", "samsung", "smart-tv", "the-frame", "home-automation"]
+requires-python = ">=3.10"
+dependencies = ["mcp==1.30.0", "samsungtvws==3.0.6", "starlette>=1.7,<2", "uvicorn>=0.31,<1"]
+
+[project.urls]
+Repository = "https://github.com/joshsgoldstein/tv-remote-mcp"
+Issues = "https://github.com/joshsgoldstein/tv-remote-mcp/issues"
+
+[project.scripts]
+tv-remote-mcp = "tv_remote_mcp.server:main"
+tv-remote = "tv_remote_mcp.cli:main"
+tv-remote-web = "tv_remote_mcp.web:main"
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "ruff>=0.14,<1"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
