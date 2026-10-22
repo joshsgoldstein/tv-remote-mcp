@@ -12,7 +12,7 @@ Run it on your laptop when you need it, or on a home computer that stays on.
   <a href="docs/DOCKER.md"><img src="https://img.shields.io/badge/deploy-Docker-171717?style=flat-square" alt="Docker deployment"></a>
 </p>
 
-## Get started with your agent harness
+## Let your coding agent set it up
 
 Copy this prompt into your coding agent or agent harness.
 It will help you choose where Home Control runs, install it, and connect your
