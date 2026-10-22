@@ -11,7 +11,7 @@ license = "MIT"
 license-files = ["LICENSE"]
 keywords = ["mcp", "samsung", "smart-tv", "the-frame", "home-automation"]
 requires-python = ">=3.10"
-dependencies = ["mcp==1.30.0", "samsungtvws==3.0.6", "starlette>=1.7,<2", "uvicorn>=0.31,<1"]
+dependencies = ["mcp==1.30.0", "samsungtvws==3.0.6", "starlette>=1.7,<2", "uvicorn>=0.31,<1", "websocket-client==1.9.2"]
 
 [project.urls]
 Repository = "https://github.com/joshsgoldstein/tv-remote-mcp"

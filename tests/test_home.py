@@ -116,7 +116,7 @@ def test_generic_web_routes_use_the_same_gate(home):
     client = TestClient(create_app(home=hub, allowed_hosts={"testserver"}))
     state = client.get("/api/state").json()
     assert state["devices"][0]["category"] == "light"
-    assert any(i["id"] == "sony_bravia" and i["status"] == "planned" for i in state["integrations"])
+    assert len(state["integrations"]) == 1
     headers = {"X-TV-Remote": "1"}
     route = "/api/devices/sample_light:living_room"
     assert (

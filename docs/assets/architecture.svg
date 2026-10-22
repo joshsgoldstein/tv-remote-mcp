@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="900" height="260" viewBox="0 0 900 260" role="img" aria-labelledby="title desc">
   <title id="title">Home Control architecture</title>
-  <desc id="desc">The web dashboard and assistant MCP tools share inventory, capabilities, and kill switches. Commands go through the Samsung adapter. LG, Sony, thermostats, and lights are planned integrations.</desc>
+  <desc id="desc">The web dashboard and assistant MCP tools share inventory, capabilities, and kill switches. Commands go through TV adapters. Samsung is implemented. LG and Sony are experimental.</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 8 4 0 8" fill="none" stroke="#737373"/></marker>
   </defs>
@@ -23,9 +23,9 @@
     <text x="400" y="105" font-weight="600">Home Control</text>
     <text x="400" y="134" fill="#525252" font-size="15">Inventory &amp; capabilities</text>
     <text x="400" y="161" fill="#525252" font-size="15">Device &amp; master kill switches</text>
-    <text x="760" y="69" font-weight="600">Samsung TVs &amp; The Frame</text>
-    <text x="760" y="95" fill="#525252" font-size="14">Implemented adapter</text>
-    <text x="760" y="177">LG · Sony · thermostats · lights</text>
-    <text x="760" y="203" fill="#737373" font-size="14">Planned / future adapters</text>
+    <text x="760" y="69" font-weight="600">Samsung · LG · Sony</text>
+    <text x="760" y="95" fill="#525252" font-size="14">TV adapters</text>
+    <text x="760" y="177">Lights · other devices</text>
+    <text x="760" y="203" fill="#737373" font-size="14">Future adapters</text>
   </g>
 </svg>

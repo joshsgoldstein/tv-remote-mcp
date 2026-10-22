@@ -13,9 +13,9 @@ mcp = FastMCP(
     "Home Control MCP",
     instructions=(
         "Smart-home control plane. Start with list_integrations and list_devices. "
-        "Only available integrations work; planned entries are not implemented. "
+        "LG and Sony adapters are experimental and need hardware validation. "
         "Use capabilities and actions advertised by each device. Respect all kill switches. "
-        "Use explicit TV IDs. Only pair_tv should trigger first-time pairing. "
+        "Use explicit TV IDs. Only an explicit pair action or pair_tv should trigger pairing. "
         "Command sent is not confirmation of visible state. Never retry a toggle blindly. "
         "The Frame's Art Mode is separate from standby power."
     ),

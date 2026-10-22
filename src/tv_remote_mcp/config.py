@@ -8,8 +8,9 @@ import tempfile
 from contextlib import contextmanager
 from ipaddress import IPv4Address, IPv4Network
 from pathlib import Path
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class TV(BaseModel):
@@ -52,11 +53,44 @@ class TV(BaseModel):
         return value
 
 
+class NetworkTV(BaseModel):
+    """LG/Sony inventory. Secrets live in separate private files."""
+
+    model_config = ConfigDict(extra="forbid")
+    integration: Literal["lg_webos", "sony_bravia"]
+    id: str = Field(pattern=r"^[a-z0-9][a-z0-9_-]{0,47}$")
+    name: str = Field(min_length=1, max_length=100)
+    host: str
+    port: int = Field(default=3001)
+    mac: str | None = None
+    model: str | None = None
+    discovery_id: str | None = None
+    device_id: str | None = None
+    enabled: bool = True
+
+    _host = field_validator("host")(TV.valid_host.__func__)
+    _mac = field_validator("mac")(TV.valid_mac.__func__)
+
+    @field_validator("port")
+    @classmethod
+    def valid_port(cls, value: int) -> int:
+        if value not in (80, 443, 3000, 3001):
+            raise ValueError("Use port 3000/3001 for LG or 80/443 for Sony")
+        return value
+
+    @model_validator(mode="after")
+    def integration_port(self):
+        if self.port not in ((3000, 3001) if self.integration == "lg_webos" else (80, 443)):
+            raise ValueError("Device port does not match the integration")
+        return self
+
+
 class Settings(BaseModel):
     model_config = ConfigDict(extra="forbid")
     controls_enabled: bool = True
     subnet: str = "192.168.1.0/24"
     tvs: list[TV] = Field(default_factory=list)
+    devices: list[NetworkTV] = Field(default_factory=list)
 
     @field_validator("subnet")
     @classmethod
@@ -71,6 +105,18 @@ class Settings(BaseModel):
     def unique_tvs(cls, value: list[TV]) -> list[TV]:
         if len({tv.id for tv in value}) != len(value):
             raise ValueError("TV IDs must be unique")
+        return value
+
+    @field_validator("devices")
+    @classmethod
+    def unique_devices(cls, value: list[NetworkTV]) -> list[NetworkTV]:
+        if len({(d.integration, d.id) for d in value}) != len(value):
+            raise ValueError("Device IDs must be unique within each integration")
+        if any(
+            d.port not in ((3000, 3001) if d.integration == "lg_webos" else (80, 443))
+            for d in value
+        ):
+            raise ValueError("Device port does not match the integration")
         return value
 
 
@@ -129,6 +175,84 @@ class Store:
                 "Device controls are disabled by a kill switch. Re-enable in the web panel or local CLI."
             )
         return tv
+
+    def network_tv(self, integration: str, device_id: str, *, command: bool = False) -> NetworkTV:
+        settings = self.load()
+        for device in settings.devices:
+            if device.integration == integration and device.id == device_id:
+                if command and (not settings.controls_enabled or not device.enabled):
+                    raise ValueError("Device controls are disabled by a kill switch")
+                return device
+        raise ValueError("Unknown device. Discover it or add its IP address first.")
+
+    def set_network_enabled(self, integration: str, device_id: str, enabled: bool) -> dict:
+        with self.lock("config"):
+            settings = self.load()
+            device = next(
+                (d for d in settings.devices if d.integration == integration and d.id == device_id),
+                None,
+            )
+            if device is None:
+                raise ValueError("Unknown device")
+            device.enabled = enabled
+            self.save(settings)
+        return {"id": f"{integration}:{device_id}", "enabled": enabled}
+
+    def merge_network(self, found: list[NetworkTV]) -> list[NetworkTV]:
+        with self.lock("config"):
+            settings = self.load()
+            for device in found:
+                existing = next(
+                    (
+                        d
+                        for d in settings.devices
+                        if d.integration == device.integration
+                        and (
+                            (device.discovery_id and d.discovery_id == device.discovery_id)
+                            or d.host == device.host
+                        )
+                    ),
+                    None,
+                )
+                if existing:
+                    existing.host = device.host
+                    existing.discovery_id = device.discovery_id or existing.discovery_id
+                    existing.model = device.model or existing.model
+                    existing.mac = device.mac or existing.mac
+                else:
+                    used = {d.id for d in settings.devices if d.integration == device.integration}
+                    base, count = device.id, 2
+                    while device.id in used:
+                        device = device.model_copy(update={"id": f"{base[:40]}-{count}"})
+                        count += 1
+                    settings.devices.append(device)
+            self.save(settings)
+            return settings.devices
+
+    def credential_path(self, integration: str, device_id: str) -> Path:
+        self.network_tv(integration, device_id)
+        self.state.mkdir(parents=True, exist_ok=True, mode=0o700)
+        return self.state / f"{integration}-{device_id}.credential.json"
+
+    def credential(self, integration: str, device_id: str) -> dict:
+        path = self.credential_path(integration, device_id)
+        return json.loads(path.read_text()) if path.exists() else {}
+
+    def save_credential(self, integration: str, device_id: str, data: dict, identity: str) -> None:
+        path = self.credential_path(integration, device_id)
+        fd, name = tempfile.mkstemp(dir=self.state, prefix=".credential-")
+        try:
+            with os.fdopen(fd, "w") as stream:
+                json.dump(data, stream)
+            os.replace(name, path)
+        finally:
+            Path(name).unlink(missing_ok=True)
+        with self.lock("config"):
+            settings = self.load()
+            for device in settings.devices:
+                if device.integration == integration and device.id == device_id:
+                    device.device_id = identity
+            self.save(settings)
 
     def token_path(self, tv: TV) -> Path:
         self.state.mkdir(parents=True, exist_ok=True, mode=0o700)

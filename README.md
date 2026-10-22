@@ -45,11 +45,11 @@ Your agent will ask a few questions, then help you set it up.
 ## What you need
 
 - A Linux or Mac computer on your home Wi-Fi.
-- A supported device. Samsung TVs and The Frame are supported first.
+- A supported TV. Samsung TVs and The Frame are supported first.
 - Someone at the TV to select **Allow** for the first connection.
 
 The computer must stay awake while you use the controls.
-LG, Sony, and ecobee support is planned.
+LG webOS and Sony BRAVIA adapters are experimental. Hardware checks are pending.
 
 ## Stay in control
 
@@ -66,6 +66,7 @@ Keep the dashboard private.
 | Install it myself | [Manual setup](docs/REFERENCE.md#quick-start) |
 | Use Docker | [Docker setup](docs/DOCKER.md) |
 | Understand how it works | [How it works](docs/HOW_IT_WORKS.md) |
+| Connect an LG or Sony TV | [TV setup](docs/TV_VENDORS.md) |
 | Add a device type | [Integrations](docs/INTEGRATIONS.md) |
 | Set it up for someone | [Agent instructions](docs/AGENT_SETUP.md) |
 | Help build it | [Contribute](CONTRIBUTING.md) |

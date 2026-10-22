@@ -7,6 +7,7 @@ dist/
 .state/
 config.local.json
 *.token
+*.credential.json
 LOCAL_SETUP.md
 .env
 .env.*

@@ -5,8 +5,12 @@ from pathlib import Path
 
 import uvicorn
 
-from tv_remote_mcp.config import TV, Settings, Store
+from tv_remote_mcp.config import TV, NetworkTV, Settings, Store
 from tv_remote_mcp.control import Controller
+from tv_remote_mcp.home import Home
+from tv_remote_mcp.integrations.lg import LGIntegration
+from tv_remote_mcp.integrations.samsung import SamsungIntegration
+from tv_remote_mcp.integrations.sony import SonyIntegration
 from tv_remote_mcp.web import create_app
 
 
@@ -57,6 +61,34 @@ class PreviewController(Controller):
         return {"status": "command_sent"}
 
 
+class PreviewNetwork:
+    def status(self, device_id):
+        return {"reachable": True, "power": None}
+
+    def discover(self, save=False):
+        return {"found": [item.model_dump() for item in self.devices()], "saved": save}
+
+    def execute(self, device_id, action, parameters):
+        self.validate(action, parameters)
+        with self.gate(device_id):
+            if action == "pair":
+                self.store.save_credential(
+                    self.id, device_id, {"fixture": "demo-only"}, "demo-identity"
+                )
+                return {"status": "connected", "token_saved": True}
+            if action == "apps":
+                return {"apps": [{"app_id": "demo.player", "name": "Demo player"}]}
+            return {"status": "command_sent"}
+
+
+class PreviewLG(PreviewNetwork, LGIntegration):
+    pass
+
+
+class PreviewSony(PreviewNetwork, SonyIntegration):
+    pass
+
+
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory() as directory:
         store = Store(Path(directory) / "config.json")
@@ -72,8 +104,28 @@ if __name__ == "__main__":
                         model="The Frame",
                     ),
                     TV(id="samsung", name="Bedroom", host="192.168.1.11", model="Samsung Smart TV"),
-                ]
+                ],
+                devices=[
+                    NetworkTV(
+                        integration="lg_webos",
+                        id="lg",
+                        name="Office",
+                        host="192.168.1.12",
+                        model="LG webOS demo",
+                    ),
+                    NetworkTV(
+                        integration="sony_bravia",
+                        id="sony",
+                        name="Den",
+                        host="192.168.1.13",
+                        port=80,
+                        model="Sony BRAVIA demo",
+                    ),
+                ],
             )
         )
         store.token_path(store.tv("frame")).write_text("fixture-only")
-        uvicorn.run(create_app(PreviewController(store)), host="127.0.0.1", port=8766)
+        store.save_credential("lg_webos", "lg", {"fixture": "demo-only"}, "demo-lg")
+        control = PreviewController(store)
+        home = Home(store, [SamsungIntegration(control), PreviewLG(store), PreviewSony(store)])
+        uvicorn.run(create_app(control, home=home), host="127.0.0.1", port=8766)

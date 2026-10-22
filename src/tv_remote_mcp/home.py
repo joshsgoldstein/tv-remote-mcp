@@ -8,14 +8,11 @@ import re
 from .config import Store
 from .control import Controller
 from .integrations import Device, Integration
+from .integrations.lg import LGIntegration
 from .integrations.samsung import SamsungIntegration
+from .integrations.sony import SonyIntegration
 
-# Roadmap entries are visible but cannot be invoked as installed integrations.
-PLANNED = (
-    {"id": "lg_webos", "name": "LG webOS", "status": "planned"},
-    {"id": "sony_bravia", "name": "Sony BRAVIA", "status": "planned"},
-    {"id": "ecobee", "name": "ecobee thermostats", "status": "planned"},
-)
+PLANNED = ()
 
 
 class Home:
@@ -36,6 +33,7 @@ class Home:
                 "name": item.name,
                 "status": "available",
                 "action_schemas": item.action_schemas,
+                "experimental": item.id in ("lg_webos", "sony_bravia"),
             }
             for item in self.integrations.values()
         ] + [item for item in PLANNED if item["id"] not in self.integrations]
@@ -99,4 +97,11 @@ class Home:
 
 def create_home(controller: Controller | None = None) -> Home:
     controller = controller or Controller()
-    return Home(controller.store, [SamsungIntegration(controller)])
+    return Home(
+        controller.store,
+        [
+            SamsungIntegration(controller),
+            LGIntegration(controller.store),
+            SonyIntegration(controller.store),
+        ],
+    )

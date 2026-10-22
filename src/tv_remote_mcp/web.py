@@ -20,7 +20,7 @@ from starlette.responses import FileResponse, JSONResponse
 from starlette.routing import Route
 from starlette.staticfiles import StaticFiles
 
-from .config import Settings
+from .config import NetworkTV, Settings
 from .control import Controller
 from .home import Home, create_home
 from .integrations.samsung import Action
@@ -167,6 +167,19 @@ def create_app(
     async def device_status(request):
         return JSONResponse(await run_in_threadpool(hub.status, request.path_params["device_id"]))
 
+    async def add_device(request):
+        payload = await body(request)
+        if set(payload) - {"integration", "id", "name", "host", "port", "mac"}:
+            raise ValueError("Unsupported device fields")
+        integration = payload.get("integration")
+        if integration not in ("lg_webos", "sony_bravia"):
+            raise ValueError("Use discovery to add Samsung TVs")
+        payload.setdefault("port", 3001 if integration == "lg_webos" else 80)
+        payload.setdefault("id", "lg" if integration == "lg_webos" else "sony")
+        device = NetworkTV.model_validate(payload)
+        await run_in_threadpool(control.store.merge_network, [device])
+        return JSONResponse({"status": "saved"})
+
     async def device_action(request):
         payload = await body(request)
         action = payload.pop("action", None)
@@ -199,6 +212,7 @@ def create_app(
         routes=[
             Route("/", index),
             Route("/api/state", state),
+            Route("/api/devices", add_device, methods=["POST"]),
             Route("/api/devices/{device_id}/controls", device_switch, methods=["POST"]),
             Route("/api/devices/{device_id}/status", device_status),
             Route("/api/devices/{device_id}/action", device_action, methods=["POST"]),

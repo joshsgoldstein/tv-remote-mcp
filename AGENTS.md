@@ -15,7 +15,8 @@ docs/HOW_IT_WORKS.md.
 - Run the server on a Linux/macOS computer on the TV's home LAN. SSH and Tailscale
   are optional transports; do not assume the user has either.
 - Build new device support through the Integration contract in docs/INTEGRATIONS.md.
-  Samsung is currently implemented; LG, Sony, ecobee, and other devices are planned.
+  Samsung is implemented. LG webOS and Sony BRAVIA PSK adapters are experimental.
+  Read docs/TV_VENDORS.md before setting them up. Other devices are not implemented.
   Do not claim unimplemented adapters work or improvise device commands.
 - Never bypass a device or master kill switch. Re-enable only when the user asks.
   New integrations must enforce both switches in their shared controller,

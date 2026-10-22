@@ -5,7 +5,7 @@ For guided setup, start with the [setup prompt](../README.md#get-started).
 ## Requirements
 
 - A device supported by an implemented integration. Currently: Samsung Tizen-era
-  TVs with local control; Art Mode needs The Frame. LG, Sony, and ecobee are planned.
+  TVs with local control; Art Mode needs The Frame. LG and Sony adapters are experimental. See [TV setup](TV_VENDORS.md).
 - A Linux or macOS laptop, desktop, or server with Python 3.10+ and [uv](https://docs.astral.sh/uv/).
 - **The machine running this server must be on the same home network as its local devices.**
   A laptop connected to your home Wi-Fi works. For ongoing availability, use a
@@ -190,9 +190,8 @@ Never expose this service through router port forwarding or a public proxy.
 | Integration | Status | Connection |
 | --- | --- | --- |
 | Samsung TVs / The Frame | Implemented; live control verification pending pairing | Local WebSocket remote / Art Mode |
-| LG webOS | Planned | Separate webOS adapter and pairing |
-| Sony BRAVIA | Planned | Separate, model-dependent Sony API adapter |
-| ecobee thermostats | Planned | Separate thermostat authorization and capabilities |
+| LG webOS | Experimental, hardware validation pending | SSAP and on-screen pairing |
+| Sony BRAVIA | Experimental, hardware validation pending | Sony JSON-RPC / IRCC with PSK |
 | Lights, plugs, other devices | Future integrations | Device/protocol-specific adapters |
 
 `list_integrations` distinguishes available adapters from planned entries and
@@ -202,7 +201,7 @@ same registry; unsupported actions are rejected before contacting a device.
 
 See [docs/INTEGRATIONS.md](INTEGRATIONS.md) for the implemented adapter
 contract, vendor references, testing requirements, and how to add a device type.
-No LG, Sony, or thermostat commands are implemented yet.
+See [TV setup](TV_VENDORS.md) for the experimental LG and Sony adapters. Other device categories are not implemented.
 
 ## Tools
 

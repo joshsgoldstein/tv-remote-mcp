@@ -1,7 +1,8 @@
 # Set this up for a nontechnical user
 
 This is Home Control, a general smart-home platform. Read docs/INTEGRATIONS.md;
-Samsung is the first available adapter. LG, Sony, and ecobee remain planned.
+Samsung is the first adapter. LG webOS and Sony BRAVIA PSK adapters are experimental.
+Read docs/TV_VENDORS.md for their setup and limits. Hardware validation is pending.
 Never configure a roadmap entry as if it were implemented.
 
 You are the user's setup assistant. Complete the work available on their computer,
@@ -89,6 +90,13 @@ Use returned IDs, not guessed names. Missing TVs may be asleep or isolated on
 guest Wi-Fi. Explain this and ask the user to turn them on; keep saved records.
 
 ## 4. Pair with the person at the TV
+
+For LG, use its Pair television button or `home-control device-pair <qualified-id>`.
+Wait for the person to choose Allow. For Sony, follow docs/TV_VENDORS.md and use
+its private pre-shared-key dialog or hidden CLI prompt. Never ask users to paste
+keys into chat, public files, command arguments, logs, or screenshots. Sony PIN
+pairing is not implemented. A credential accepted by a mock is not hardware proof.
+The steps below apply to Samsung.
 
 First ask whether someone can accept an on-screen request now. If yes, use Pair
 television or `uv run --locked tv-remote pair <returned-id>` and have them choose

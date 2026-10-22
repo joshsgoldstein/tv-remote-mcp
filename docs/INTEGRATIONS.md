@@ -21,29 +21,27 @@ and pairing flows remain capability-specific.
   `/api/integrations/{integration_id}/discover`. The dashboard reads the shared
   inventory and shows controls according to capabilities.
 
-The current registration includes Samsung only. LG, Sony, and ecobee entries in
-the catalog are **planned**, not runnable stubs. A planned integration request
-fails before contacting a device. Installation requires reviewed adapter code;
-there is no runtime download or arbitrary plugin execution endpoint.
+The current registry includes Samsung, LG webOS, and Sony BRAVIA.
+LG and Sony are experimental. Their protocol tests use simulated devices.
+Physical control has not been checked on LG or Sony hardware.
 
-## Why separate adapters
+## TV adapters
 
-| Integration | Device interface | Status in this repository |
+| Adapter | Connection | Status |
 | --- | --- | --- |
-| Samsung | Local Samsung WebSocket remote and Frame art channels via samsungtvws; on-screen pairing | Implemented; physical command validation pending pairing |
-| LG webOS | webOS SSAP over WebSockets with its own pairing/client key | Planned |
-| Sony BRAVIA | Model-dependent Sony REST APIs and IRCC-IP remote commands; device-specific authentication | Planned |
-| ecobee | Separate thermostat authorization/API and thermostat capabilities | Planned; establish an available access route first |
+| Samsung / The Frame | Samsung WebSocket and Art Mode | Implemented; physical commands await pairing checks |
+| LG webOS | SSAP WebSocket, with on-screen approval | Experimental; hardware checks pending |
+| Sony BRAVIA | JSON-RPC and IRCC-IP, with a pre-shared key | Experimental; hardware checks pending |
 
-Sources: [Samsung library](https://github.com/xchwarze/samsung-tv-ws-api),
-[LG client implementation](https://github.com/home-assistant-libs/aiowebostv),
+Read [TV setup](TV_VENDORS.md) for the exact models, ports, and authorization limits.
+No thermostat adapter is included.
+
+Protocol references: [LG SSAP client](https://github.com/home-assistant-libs/aiowebostv),
+[LG command reference](https://github.com/supersaiyanmode/PyWebOSTV),
 [Sony REST specifications](https://pro-bravia.sony.net/remote-display-control/rest-api/structure/),
-[Sony IRCC-IP](https://pro-bravia.sony.net/remote-display-control/ircc-ip/),
-[ecobee developer access](https://www.ecobee.com/en-us/developers/).
-Sony's cited documentation covers BRAVIA Professional Displays; verify the actual
-consumer model's APIs before implementing. Neither manufacturer nor operating
-system alone guarantees a capability. ecobee currently reports that new developer
-registrations are unavailable; recheck before choosing an integration route.
+[Sony IRCC-IP](https://pro-bravia.sony.net/remote-display-control/ircc-ip/).
+Sony's API documentation covers Professional Displays. Consumer TV support varies.
+These adapters do not implement Android TV ADB, LG NetCast, or Sony PIN/cookie pairing.
 
 ## Contract
 
@@ -96,7 +94,7 @@ is idempotent. Missing/unreachable means unknown rather than off.
    Samsung records, token IDs, and switches. The current `tvs` config collection
    remains the Samsung adapter's storage, not a template for every future device.
 3. Register the adapter explicitly in `create_home`. Its available catalog entry
-   automatically replaces the corresponding planned entry.
+   becomes an available entry. Mark untested adapters as experimental.
 4. Supply capability and parameter schemas. Reuse common UI controls where the
    semantics match. Add category-specific widgets for new capabilities; do not
    shoehorn temperature setpoints into a TV remote. The generic fallback currently

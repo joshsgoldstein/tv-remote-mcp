@@ -28,7 +28,8 @@ for example `127.0.0.1:8767:8765`, then open that port.
 In the panel, set **Home network** to the physical home LAN subnet, choose an
 available integration, and click **Find devices**. Container-internal subnets
 such as 172.17.0.0/16 are not the TV network. Authorize pairing on the device when
-ready. The Samsung integration is implemented; LG, Sony, and ecobee remain planned.
+ready. Samsung is implemented. LG and Sony adapters are experimental. See
+[TV setup](TV_VENDORS.md) for authorization and model limits.
 
 ## Persistence and updates
 

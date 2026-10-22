@@ -62,11 +62,11 @@ function updateControls() {
     button.disabled = busy;
   });
   document.querySelectorAll('[data-paired]').forEach(node => node.disabled = busy || !controlsEnabled || tv?.enabled === false || !tv || !tv.paired);
-  $('wake').disabled = busy || !controlsEnabled || tv?.enabled === false || !tv?.capabilities.includes('wake');
+  $('wake').disabled = busy || !controlsEnabled || tv?.enabled === false || !tv?.capabilities.includes('wake') || (!tv?.paired && tv?.details.wake_requires_pairing);
   ['pair-main', 'pair-again'].forEach(id => $(id).disabled = busy || !controlsEnabled || tv?.enabled === false);
   // Kill switches remain usable while a slow command is in flight.
   $('master-switch').disabled = false; $('device-switch').disabled = !tv;
-  $('wake').title = tv?.capabilities.includes('wake') ? 'Send a Wake-on-LAN packet' : 'No MAC address saved; discover this TV while powered on';
+  $('wake').title = tv?.capabilities.includes('wake') ? (tv?.details.wake_method === 'network' ? 'Request power on through the TV network API' : 'Send a Wake-on-LAN packet') : 'No MAC address saved; discover this TV while powered on';
 }
 function renderList() {
   $('tv-count').textContent = String(devices.length);
@@ -93,6 +93,7 @@ function select(id, refresh = true) {
   $('breadcrumb-tv').textContent = tv.name; $('device-name').textContent = tv.name;
   $('device-kind').textContent = `${tv.manufacturer} · ${tv.category}`.toUpperCase();
   $('remote-brand').textContent = tv.manufacturer;
+  document.querySelectorAll('[data-key]').forEach(button => {button.hidden = Boolean(tv.details.keys) && !tv.details.keys.includes(button.dataset.key);});
   $('remote-panel').hidden = !tv.capabilities.includes('remote');
   $('generic-device-note').hidden = tv.capabilities.includes('remote');
   $('apps-panel').hidden = !tv.capabilities.includes('apps') && !tv.capabilities.includes('text');
@@ -101,7 +102,8 @@ function select(id, refresh = true) {
   $('text-form').hidden = !tv.capabilities.includes('text');
   $('pair-again').hidden = !tv.capabilities.includes('pairing');
   $('pairing-description').textContent = tv.details.pairing_message || 'Authorize this connection using the instructions for this device’s integration.';
-  $('device-model').textContent = tv.model || tv.category; $('device-address').textContent = tv.details.host || '—';
+  $('device-model').textContent = [tv.model || tv.category, tv.details.experimental ? 'Experimental adapter' : null].filter(Boolean).join(' · ');
+  $('apps-heading').textContent = tv.capabilities.includes('text') ? 'Apps & text' : 'Apps'; $('device-address').textContent = tv.details.host || 'Unknown';
   $('device-power').textContent = 'Unknown'; $('device-pairing').textContent = tv.paired ? 'Saved on this computer' : 'Not saved';
   $('connection-status').textContent = 'Not checked'; $('connection-status').className = 'pill';
   $('last-checked').textContent = 'Status not checked yet'; $('pairing-banner').hidden = tv.paired || !tv.capabilities.includes('pairing');
@@ -134,7 +136,7 @@ async function refreshStatus() {
   const matched = state.reachable && state.identity_matches !== false;
   $('connection-status').textContent = matched ? 'Reachable' : state.reachable ? 'Identity changed' : 'Not reachable';
   $('connection-status').className = `pill${matched ? ' good' : ' bad'}`;
-  $('device-power').textContent = state.power === 'on' ? 'On · TV or Art Mode' : state.power === 'off' ? 'Off' : 'Unknown';
+  $('device-power').textContent = state.power === 'on' ? (current()?.integration === 'samsung' ? 'On · TV or Art Mode' : 'On') : state.power === 'off' ? 'Off' : 'Unknown';
   $('last-checked').textContent = `Checked ${new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}`;
   if (state.identity_matches === false) notice('This address belongs to a different TV. Find televisions again before controlling it.', true);
 }
@@ -170,11 +172,16 @@ $('refresh').addEventListener('click', () => run('Status refresh', refreshStatus
 $('network-form').addEventListener('submit', event => {
   event.preventDefault(); run('Network saved', () => api('/api/network', {subnet: $('subnet').value.trim()}));
 });
-async function pair() {
-  const result = await command({action: 'pair'}, 'TV pairing', current()?.details.pairing_message || 'Follow the authorization instructions for your device…');
+async function pair(parameters = {}) {
+  if (current()?.details.auth === 'psk' && !parameters.psk) {$('sony-psk').value = ''; $('sony-dialog').showModal(); return;}
+  const result = await command({action: 'pair', ...parameters}, 'TV pairing', current()?.details.pairing_message || 'Follow the authorization instructions for your device…');
   if (result) {await loadState().catch(error => notice(error.message, true)); notice(result.token_saved ? 'Pairing token saved. Your remote is ready.' : 'Connected, but no token was saved. Check your TV authorization settings.');}
 }
-$('pair-main').addEventListener('click', pair); $('pair-again').addEventListener('click', pair);
+$('pair-main').addEventListener('click', () => pair()); $('pair-again').addEventListener('click', () => pair());
+$('sony-cancel').addEventListener('click', () => {$('sony-psk').value = ''; $('sony-dialog').close();});
+$('sony-form').addEventListener('submit', event => {event.preventDefault(); const psk = $('sony-psk').value; $('sony-psk').value = ''; $('sony-dialog').close(); pair({psk});});
+$('sony-dialog').addEventListener('close', () => {$('sony-psk').value = '';});
+$('add-tv-form').addEventListener('submit', async event => {event.preventDefault(); const payload = {integration: $('add-integration').value, name: $('add-name').value.trim(), host: $('add-host').value.trim()}; if ($('add-port').value) payload.port = Number($('add-port').value); await run('Save TV', async () => {const result = await api('/api/devices', payload); await loadState(); return result;});});
 document.querySelectorAll('[data-key]').forEach(button => button.addEventListener('click', () => command({action: 'key', key: button.dataset.key}, button.getAttribute('aria-label') || button.textContent.trim())));
 $('wake').addEventListener('click', () => command({action: 'power', power: 'on'}, 'Wake request'));
 $('power-off').addEventListener('click', () => {$('power-dialog').returnValue = ''; $('power-dialog').showModal();});
@@ -203,7 +210,7 @@ $('apps-list').addEventListener('click', async () => {
   const result = await command({action: 'apps'}, 'Load applications');
   if (result) itemList('apps', result.apps, item => item.name || item.appId || item.app_id || item.id || 'Unnamed app', item => {
     const id = String(item.appId || item.app_id || item.id || '');
-    if (id) command({action: 'launch', app_id: id, app_type: Number(item.app_type) === 1 ? 'NATIVE_LAUNCH' : 'DEEP_LINK'}, 'Launch application');
+    if (id) {const payload = {action: 'launch', app_id: id}; if (current()?.integration === 'samsung') payload.app_type = Number(item.app_type) === 1 ? 'NATIVE_LAUNCH' : 'DEEP_LINK'; command(payload, 'Launch application');}
   }, 'This TV did not return an app list. You can still launch a known app ID.');
 });
 $('art-list').addEventListener('click', async () => {
