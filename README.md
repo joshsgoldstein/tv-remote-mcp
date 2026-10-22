@@ -12,9 +12,11 @@ Run it on your laptop when you need it, or on a home computer that stays on.
   <a href="docs/DOCKER.md"><img src="https://img.shields.io/badge/deploy-Docker-171717?style=flat-square" alt="Docker deployment"></a>
 </p>
 
-## Get started
+## Get started with your agent harness
 
-Copy this prompt. Paste it into your coding agent.
+Copy this prompt into your coding agent or agent harness.
+It will help you choose where Home Control runs, install it, and connect your
+assistant through MCP. Use the web page, assistant controls, or both.
 
 ```text
 Set up https://github.com/joshsgoldstein/tv-remote-mcp for me.
@@ -28,7 +30,9 @@ Leave TV pairing pending if I cannot select Allow on the TV.
 Then help me set up my agent harness. Connect Home Control through MCP.
 ```
 
-Your agent will ask a few questions, then help you set it up.
+Your agent will ask a few questions, then guide you through setup.
+You can run Home Control on your laptop when you need it, or on a home computer
+that stays on.
 
 <p align="center">
   <img src="docs/control-panel.png" alt="Home Control dashboard with sample devices and control switches" width="70%">
