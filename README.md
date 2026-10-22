@@ -3,6 +3,31 @@
 </p>
 
 <p align="center">
+  <a href="#get-started"><img src="https://img.shields.io/badge/Get_started-Copy_setup_prompt-171717?style=for-the-badge" alt="Get started: copy the setup prompt below"></a>
+  <a href="docs/DOCKER.md"><img src="https://img.shields.io/badge/Run_with-Docker-525252?style=for-the-badge" alt="Run with Docker"></a>
+</p>
+
+## Get started
+
+Use the copy button on this prompt, then paste it into your coding assistant:
+
+```text
+Set up https://github.com/joshsgoldstein/tv-remote-mcp for me.
+Read AGENTS.md and docs/AGENT_SETUP.md first. Interview me about where and
+how I want it deployed: a temporary laptop session, an always-on home computer,
+or Docker; and whether I want the web dashboard, MCP assistant control, or both.
+Reuse answers I've already given. Preserve my settings and kill switches.
+Complete the setup I choose, give me the URL and start/stop instructions,
+and leave device pairing pending if I can't approve it on the TV.
+Keep the dashboard private.
+```
+
+Your assistant will help choose an option that fits how you want to use it.
+For manual installation, jump to [Quick start](#quick-start),
+[occasional laptop use](docs/LAPTOP.md), or [Docker](docs/DOCKER.md).
+See the [agent setup guide](docs/AGENT_SETUP.md) for the full interview and runbook.
+
+<p align="center">
   <a href="https://github.com/joshsgoldstein/tv-remote-mcp/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/joshsgoldstein/tv-remote-mcp/ci.yml?branch=main&amp;style=flat-square&amp;label=build" alt="Build status"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-171717?style=flat-square" alt="MIT license"></a>
   <a href="#requirements"><img src="https://img.shields.io/badge/Python-3.10%2B-171717?style=flat-square" alt="Python 3.10 and newer"></a>
@@ -10,7 +35,7 @@
 </p>
 
 <p align="center">
-  <a href="#quick-start"><strong>Get started</strong></a> ·
+  <a href="#get-started"><strong>Get started</strong></a> ·
   <a href="docs/DOCKER.md">Docker</a> ·
   <a href="docs/AGENT_SETUP.md">Agent setup</a> ·
   <a href="docs/HOW_IT_WORKS.md">How it works</a> ·
@@ -41,25 +66,6 @@ implemented integration.** LG, Sony, and ecobee adapters are planned.
 > checked on hardware. Physical remote, apps, wake, and Art Mode operations still
 > await verification after on-screen pairing. Other integrations are not yet implemented.
 
-## Let your assistant set it up
-
-Give your coding assistant this prompt:
-
-> Set up https://github.com/joshsgoldstein/tv-remote-mcp for me. Read AGENTS.md
-> and docs/AGENT_SETUP.md. Interview me about where and how I want it deployed
-> before installing or starting it. Offer a temporary laptop session, an
-> always-on home computer, and Docker as appropriate. Then open the device
-> dashboard if I want it, check available integrations,
-> discover devices using an implemented integration, and connect my MCP
-> client if I have one. Preserve existing settings. Tell me when to press Allow
-> on the device, and leave pairing pending if I'm not there. Show me the device
-> and master kill switches. Don't make the panel publicly accessible.
-
-The assistant needs permission to run commands on the chosen computer. You only
-need to choose how it runs and accept the TV's pairing prompt when ready.
-[The setup runbook](docs/AGENT_SETUP.md) explains discovery, installation,
-verification, and what to do when someone is away from home.
-
 ## Requirements
 
 - A device supported by an implemented integration. Currently: Samsung Tizen-era
@@ -79,7 +85,7 @@ Older Orsay-only Samsung TVs are not implemented.
 Choose [Docker Compose](docs/DOCKER.md) for a container, or the native setup below.
 A [laptop session](docs/LAPTOP.md) is a good option for occasional use; an
 always-on home computer keeps controls available while your laptop is away.
-If you prefer to hand setup to an assistant, use the [ready-to-paste prompt](#let-your-assistant-set-it-up).
+If you prefer to hand setup to an assistant, use the [ready-to-paste prompt](#get-started).
 
 Run these commands on the laptop or computer that is connected to the TV's home
 network:
