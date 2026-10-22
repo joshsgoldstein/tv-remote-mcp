@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/banner.svg" alt="Home Control — Your home. One control plane." width="100%">
+  <img src="docs/assets/banner.svg" alt="Home Control — Your home. One control plane." width="85%">
 </p>
 
 <p align="center">
@@ -13,6 +13,7 @@
   <a href="#quick-start"><strong>Get started</strong></a> ·
   <a href="docs/DOCKER.md">Docker</a> ·
   <a href="docs/AGENT_SETUP.md">Agent setup</a> ·
+  <a href="docs/HOW_IT_WORKS.md">How it works</a> ·
   <a href="docs/INTEGRATIONS.md">Integrations</a> ·
   <a href="CONTRIBUTING.md">Contribute</a>
 </p>
@@ -28,7 +29,7 @@ their own protocols and authorization. **Samsung TVs and The Frame are the first
 implemented integration.** LG, Sony, and ecobee adapters are planned.
 
 <p align="center">
-  <img src="docs/control-panel.png" alt="Home Control dashboard showing sample devices, integration selection, remote controls, and kill switches" width="100%">
+  <img src="docs/control-panel.png" alt="Home Control dashboard showing sample devices, integration selection, remote controls, and kill switches" width="80%">
   <br><sub>Dashboard preview with sample devices. Available controls depend on the installed integration and device.</sub>
 </p>
 
@@ -45,41 +46,19 @@ implemented integration.** LG, Sony, and ecobee adapters are planned.
 Give your coding assistant this prompt:
 
 > Set up https://github.com/joshsgoldstein/tv-remote-mcp for me. Read AGENTS.md
-> and docs/AGENT_SETUP.md, install it on my laptop or an available always-on
-> home computer, open the device dashboard, check available integrations,
+> and docs/AGENT_SETUP.md. Interview me about where and how I want it deployed
+> before installing or starting it. Offer a temporary laptop session, an
+> always-on home computer, and Docker as appropriate. Then open the device
+> dashboard if I want it, check available integrations,
 > discover devices using an implemented integration, and connect my MCP
 > client if I have one. Preserve existing settings. Tell me when to press Allow
 > on the device, and leave pairing pending if I'm not there. Show me the device
 > and master kill switches. Don't make the panel publicly accessible.
 
 The assistant needs permission to run commands on the chosen computer. You only
-need to choose where it runs and accept the TV's pairing prompt when ready.
+need to choose how it runs and accept the TV's pairing prompt when ready.
 [The setup runbook](docs/AGENT_SETUP.md) explains discovery, installation,
 verification, and what to do when someone is away from home.
-
-## How it works
-
-```mermaid
-flowchart LR
-    A[Web dashboard] --> H[Home Control: inventory and capabilities]
-    B[Assistant / MCP] --> H
-    H --> K[Shared device and master kill switches]
-    K --> S[Samsung adapter: implemented]
-    K -.-> L[LG / Sony adapters: planned]
-    K -.-> D[Thermostats / lights / other adapters: future]
-    S --> T[Samsung TVs and The Frame]
-```
-
-The dashboard and assistant use qualified IDs such as `samsung:frame`, discover
-which capabilities a device offers, and route actions through its adapter.
-The shared command gate checks the saved kill switches before adapter execution.
-Each adapter owns its protocol, authentication, validation, and supported actions.
-
-For Samsung, [samsungtvws](https://github.com/xchwarze/samsung-tv-ws-api) handles
-local remote/Art Mode channels, with device information for discovery/status and
-Wake-on-LAN for power-on. The [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk/tree/v1.x)
-provides tool schemas and stdio transport. No public HTTP endpoint is required.
-
 
 ## Requirements
 
@@ -98,6 +77,8 @@ Older Orsay-only Samsung TVs are not implemented.
 ## Quick start
 
 Choose [Docker Compose](docs/DOCKER.md) for a container, or the native setup below.
+A [laptop session](docs/LAPTOP.md) is a good option for occasional use; an
+always-on home computer keeps controls available while your laptop is away.
 If you prefer to hand setup to an assistant, use the [ready-to-paste prompt](#let-your-assistant-set-it-up).
 
 Run these commands on the laptop or computer that is connected to the TV's home
@@ -124,6 +105,19 @@ use **Pair television** when someone is ready to choose Allow on the TV.
 For a television, the panel includes a directional remote, volume, channels, playback, power,
 app launching, text entry, and Frame Art Mode with artwork selection.
 It shares saved TVs and pairing tokens with MCP.
+
+### Use your laptop only when you need it
+
+You can run Home Control in the background on your everyday laptop while you're
+using it at home. Start it when needed, open the dashboard, then stop it when
+you're done. Your devices, pairing tokens, and kill switches stay saved for next
+time. No always-on server is required for this option.
+
+See [the laptop session guide](docs/LAPTOP.md) for copy-and-paste start/stop
+commands. The laptop must be awake and connected to the devices' home Wi-Fi;
+sleeping or leaving home makes control unavailable until it reconnects.
+For assistant-only use, your MCP client starts the server on demand, so the web
+panel does not need to run.
 
 ### Device kill switches
 

@@ -3,6 +3,12 @@
 This is Home Control, a general smart-home control plane with MCP and a web dashboard.
 Samsung TVs are the first integration, not the product boundary.
 Read README.md and docs/AGENT_SETUP.md before setting it up for someone.
+Before deployment, follow the user interview in docs/AGENT_SETUP.md: establish
+where it runs, temporary laptop versus always-on availability, native versus
+Docker installation, and dashboard/MCP preferences. Reuse answers already given;
+do not silently choose a host, background service, or installation method.
+Use docs/LAPTOP.md for occasional laptop sessions. Architecture is documented in
+docs/HOW_IT_WORKS.md.
 
 ## Boundaries
 

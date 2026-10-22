@@ -8,14 +8,52 @@ You are the user's setup assistant. Complete the work available on their compute
 then explain only what they need to do. Use the user's existing authorization;
 ask concise questions only for information or permission you actually lack.
 
-## 1. Choose where it runs
+## 1. Interview the user about deployment
 
-Check the current OS and network. A Linux/macOS laptop on home Wi-Fi is the
-simplest option. An always-on home computer/server keeps it available when the
-laptop sleeps or leaves. Windows hosting is not supported. Ask which existing
-home computer to use only if the current computer cannot reach the TVs.
-Do not require SSH for a local installation. If the user is away, install on an
-already-authorized home host; otherwise prepare locally and defer discovery.
+Before installing dependencies, starting a server, changing MCP configuration,
+or creating services, have a short deployment conversation. Cloning and reading
+this repository is preparation, not a reason to choose a deployment for them.
+Reuse explicit answers and existing authorization from the conversation; ask only
+for decisions that are still missing. Read-only OS/network checks can help you
+present relevant options. Do not ask the user for facts you can safely inspect.
+
+Ask in plain language, preferably together with simple choices:
+
+1. **Where should it run, and when should it be available?** Offer this laptop
+   only while they're using it, or an existing always-on home computer/server.
+   Explain that the host must be on the devices' home network. A temporary laptop
+   session is a complete option; it needs the laptop awake and on home Wi-Fi.
+   An always-on host keeps controls available when the laptop sleeps or leaves.
+2. **How would they like to use it?** Offer the web dashboard, their assistant
+   through MCP, or both. If MCP is wanted, identify their actual client and where
+   it runs. If both are wanted, explain that they are separate processes sharing
+   settings, and stopping the dashboard doesn't disconnect the assistant.
+3. **Do they have a preferred installation method?** Recommend native Python/uv
+   for a simple laptop session. Offer Docker when they already use it or prefer
+   a container. Explain that Docker still needs a home-network host and may
+   affect broadcast discovery/wake. If they have no preference, recommend the
+   simplest method for the host they chose and confirm that choice in the recap.
+
+Ask about access from another computer or away from home only if they need it.
+Private remote access needs explicit authorization and an existing or deliberately
+configured private transport. Keep localhost as the default. Do not assume SSH,
+Tailscale, a cloud account, Docker, or an always-on server is available.
+
+Recap the selected host, availability, installation method, and dashboard/MCP
+choices in one sentence, then proceed using their answers. This is a deployment
+choice, not a separate approval gate for every command. Do not repeat questions
+that the user has already answered. If they ask for advice, give a recommendation
+and resolve the remaining choice before starting deployment.
+
+For a temporary laptop session, follow docs/LAPTOP.md and provide its start/stop
+commands. Keep its terminal available. Do not install a login/startup service for
+this mode. For continuous availability, agree on the service behavior before
+creating it. Preserve services already installed.
+
+Linux/macOS native hosting is supported. If the current computer is away from
+home, explain that local discovery/control must wait until it reconnects, or use
+an already-authorized host inside the home LAN. Prepare locally if that's their
+choice; leave hardware discovery and pairing pending as needed.
 
 ## 2. Install without replacing personal settings
 
@@ -100,5 +138,7 @@ Do not put a personal tailnet URL or credentials into this public repository.
 
 Report the actual clickable web URL, where the server runs, whether it stays
 running, discovered TVs, paired versus pending TVs, and connected MCP client.
-Give the exact start/stop commands for their installation. State any remaining
+Give the exact start/stop commands for their installation. For a laptop session,
+identify the terminal that owns the background process and how to stop it; closing
+the browser alone does not stop the panel. State any remaining
 manual action. Do not call the setup fully paired when a token is absent.
