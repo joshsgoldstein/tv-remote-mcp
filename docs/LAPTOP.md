@@ -6,7 +6,7 @@ stop it when you're done. An always-on home server is useful for continuous
 availability, but occasional use works well on a laptop.
 
 This guide is for Linux/macOS and assumes you've completed the
-[README quick start](../README.md#quick-start), including `uv sync --locked`.
+[manual setup guide](REFERENCE.md#quick-start), including `uv sync --locked`.
 Keep using the same checkout and saved configuration.
 
 ## Start the dashboard in the background
@@ -47,7 +47,7 @@ processes before stopping anything; don't reuse an old process ID.
 ## Use only your assistant
 
 For MCP control, configure your client using
-[Connect your assistant](../README.md#connect-your-assistant). The MCP client
+[Connect your assistant](REFERENCE.md#connect-your-assistant). The MCP client
 starts its own server process when it connects, so no web panel or background
 terminal command is required. End or disable that MCP server connection in your
 client when you're finished. Some clients keep MCP processes running until the

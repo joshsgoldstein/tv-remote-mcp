@@ -131,7 +131,8 @@ After=network-online.target, and WantedBy=default.target. Verify `systemctl --us
 works and lingering is enabled if it must survive logout/reboot. Do not claim
 reboot persistence unless verified. macOS uses launchd. Preserve other services.
 
-Private access from a phone or another computer is optional; follow README.md.
+Private access from a phone or another computer is optional. Follow
+docs/REFERENCE.md, under Optional private browser access.
 Do not put a personal tailnet URL or credentials into this public repository.
 
 ## 7. Finish with evidence the user understands

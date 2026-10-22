@@ -31,6 +31,14 @@ docs/HOW_IT_WORKS.md.
   verified real hardware. Do not send test power/volume/artwork commands without
   the user's request. Status reads and inventory checks are appropriate setup checks.
 
+## Writing for users
+
+Use ASD-STE100 Simplified Technical English as inspiration, not a compliance claim.
+Use short sentences and common words. Give one action per instruction.
+Use the same name for the same thing. Do not use em dashes.
+Keep README.md short. Put detailed procedures in the linked docs.
+Keep deployment choices in docs/AGENT_SETUP.md. Do not skip the user interview.
+
 ## Development
 
 Python 3.10+, uv with uv.lock. UI is static HTML/CSS/JS packaged in

@@ -17,4 +17,4 @@ provides tool schemas and stdio transport. No public HTTP endpoint is required.
 
 For adapter details, supported capabilities, and adding new device types, see
 [the integration contract](INTEGRATIONS.md). For installation, return to the
-[setup options](../README.md#quick-start).
+[setup options](REFERENCE.md#quick-start).
