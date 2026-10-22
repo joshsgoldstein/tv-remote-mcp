@@ -42,7 +42,7 @@ that stays on.
 ## What you need
 
 - A Linux or Mac computer on your home Wi-Fi.
-- A supported TV. Samsung TVs and The Frame are supported first.
+- A Samsung TV, The Frame, LG webOS TV, or compatible Sony BRAVIA TV.
 - Someone at the TV to select **Allow** for the first connection.
 
 The computer must stay awake while you use the controls.
