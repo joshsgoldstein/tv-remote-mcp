@@ -1,6 +1,6 @@
 # Setup and technical reference
 
-For guided setup, start with the [setup prompt](../README.md#get-started).
+For guided setup, start with the [setup prompt](../README.md#get-started-with-your-agent-harness).
 
 ## Requirements
 
@@ -21,7 +21,7 @@ Older Orsay-only Samsung TVs are not implemented.
 Choose [Docker Compose](DOCKER.md) for a container, or the native setup below.
 A [laptop session](LAPTOP.md) is a good option for occasional use; an
 always-on home computer keeps controls available while your laptop is away.
-If you prefer to hand setup to an assistant, use the [setup prompt](../README.md#get-started).
+If you prefer to hand setup to an assistant, use the [setup prompt](../README.md#get-started-with-your-agent-harness).
 
 Run these commands on the laptop or computer that is connected to the TV's home
 network:
