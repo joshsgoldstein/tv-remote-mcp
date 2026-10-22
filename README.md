@@ -66,7 +66,7 @@ Keep the dashboard private.
 | Install it myself | [Manual setup](docs/REFERENCE.md#quick-start) |
 | Use Docker | [Docker setup](docs/DOCKER.md) |
 | Understand how it works | [How it works](docs/HOW_IT_WORKS.md) |
-| Connect an LG or Sony TV | [TV setup](docs/TV_VENDORS.md) |
+| Connect my TV | [TV setup](docs/TV_VENDORS.md) |
 | Add a device type | [Integrations](docs/INTEGRATIONS.md) |
 | Set it up for someone | [Agent instructions](docs/AGENT_SETUP.md) |
 | Help build it | [Contribute](CONTRIBUTING.md) |

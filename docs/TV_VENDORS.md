@@ -1,22 +1,50 @@
-# Connect an LG or Sony TV
+# Connect your TV
 
-LG and Sony adapters are **experimental**. Protocol tests use simulated devices.
-No LG or Sony hardware has been checked yet. Support depends on your model.
-Keep your existing Samsung setup. No token migration is needed.
+Choose the instructions for your TV:
 
-## Add your TV
+- [Samsung TVs and The Frame](#samsung-tvs-and-the-frame)
+- [LG webOS](#lg-webos)
+- [Sony BRAVIA](#sony-bravia)
+
+Samsung is the first adapter. LG and Sony adapters are experimental.
+Physical control checks are still pending. Support depends on your model.
+
+## Find your TV
 
 1. Turn on the TV.
 2. Open Home Control on a computer on your home network.
-3. Select LG webOS or Sony BRAVIA under **Discover with**.
+3. Select your TV brand under **Discover with**.
 4. Select **Find devices**.
-5. If discovery finds nothing, open **Add TV by address**.
-6. Enter the TV type, name, and IP address.
-7. Select **Add TV**.
+5. Select your TV from the list.
+6. Follow the instructions for your brand below.
 
-Discovery uses UPnP/SSDP. Some TVs disable it. Docker bridge networks can block
-multicast packets. Manual IP entry works without multicast discovery.
-A network match is not proof that your model supports all controls.
+If an LG or Sony TV is missing, use **Add TV by address**.
+Enter its type, name, and IP address. Then select **Add TV**.
+For a missing Samsung TV, check the home subnet and scan again.
+[The manual setup guide](REFERENCE.md#discover-and-pair-from-the-terminal) has more help.
+
+LG and Sony discovery uses UPnP/SSDP. Some TVs and Docker networks block it.
+Manual IP entry works without multicast discovery.
+
+## Samsung TVs and The Frame
+
+Use this adapter for Samsung Tizen TVs. Older Orsay TVs are not supported.
+The Frame uses the same setup.
+
+1. Select **Pair television** in Home Control.
+2. Select **Allow** on the TV for **Samsung TV Remote MCP** within 25 seconds.
+3. Wait for Home Control to show that the pairing token was saved.
+
+If no one can select Allow, leave pairing pending. Try again when someone is ready.
+The saved token lets Home Control reconnect later. Keep the TV's authorization enabled.
+
+Use the remote panel for navigation, volume, channels, and playback.
+Select **Load apps** to request the app list. App support varies by model.
+
+On The Frame, use the **Art Mode** panel to select art or request Art Mode.
+Art Mode and TV power are separate. A power toggle can change between them.
+For power on, the TV needs Wake-on-LAN support and a saved MAC address.
+Enable **Power On with Mobile** if your model provides it.
 
 ## LG webOS
 
@@ -69,6 +97,11 @@ App APIs can be absent on some models.
 These addresses are examples. Use the TV's actual address and returned device ID.
 
 ```sh
+# Samsung: use the ID returned by discovery.
+uv run tv-remote discover --save
+uv run tv-remote pair frame
+
+# LG and Sony:
 uv run home-control add-device lg_webos lounge 192.168.1.20 --name "Lounge LG"
 uv run home-control device-pair lg_webos:lounge
 uv run home-control add-device sony_bravia den 192.168.1.21 --name "Den Sony"
@@ -82,13 +115,15 @@ Use `--port 443` for a Sony with an HTTPS API.
 
 ## State and control switches
 
-Status checks open a TCP connection only. They do not pair the TV or read power.
-The dashboard reports power as unknown for these adapters.
+Samsung status reads the TV's reported state.
+LG and Sony status checks open a TCP connection only. They do not read power.
+The dashboard reports power as unknown for LG and Sony.
+Status checks do not start pairing.
 A saved key does not guarantee that the TV still accepts it.
 If the TV revokes a key, an explicit command can fail or cause a new TV prompt.
 Pair again only when someone is ready.
 
-Both adapters check the device and master switches before commands.
+All three adapters check the device and master switches before commands.
 They check again after a connection or authorization step.
 This includes pairing, wake, apps, and remote keys.
 Keys use private files with mode 0600. Inventory and status never return them.
