@@ -16,13 +16,6 @@ Run it on your laptop when you need it, or on a home computer that stays on.
 
 Copy this prompt. Paste it into your coding agent.
 
-<p align="center">
-  <a href="#get-started"><img src="docs/assets/setup-codex.svg" alt="Set up with Codex" height="42"></a>
-  <a href="#get-started"><img src="docs/assets/setup-claude.svg" alt="Set up with Claude Code" height="42"></a>
-  <a href="#get-started"><img src="docs/assets/setup-cursor.svg" alt="Set up with Cursor" height="42"></a>
-  <a href="#get-started"><img src="docs/assets/setup-copilot.svg" alt="Set up with GitHub Copilot" height="42"></a>
-</p>
-
 ```text
 Set up https://github.com/joshsgoldstein/tv-remote-mcp for me.
 Read AGENTS.md and docs/AGENT_SETUP.md first.
@@ -38,7 +31,7 @@ Then help me set up my agent harness. Connect Home Control through MCP.
 Your agent will ask a few questions, then help you set it up.
 
 <p align="center">
-  <img src="docs/control-panel.png" alt="Home Control dashboard with sample devices and control switches" width="80%">
+  <img src="docs/control-panel.png" alt="Home Control dashboard with sample devices and control switches" width="70%">
   <br><sub>Demo devices. Controls depend on your device.</sub>
 </p>
 
