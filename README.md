@@ -32,6 +32,7 @@ Explain the install options in simple words. Use answers I have already given.
 Keep my saved settings and control switches. Keep the dashboard private.
 Complete my chosen setup. Give me the web address and start and stop commands.
 Leave TV pairing pending if I cannot select Allow on the TV.
+Then help me set up my agent harness. Connect Home Control through MCP.
 ```
 
 Your agent will ask a few questions, then help you set it up.
