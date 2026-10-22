@@ -5,6 +5,13 @@
 Control your home devices from a web page or your coding assistant.
 Run it on your laptop when you need it, or on a home computer that stays on.
 
+<p align="center">
+  <a href="https://github.com/joshsgoldstein/tv-remote-mcp/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/joshsgoldstein/tv-remote-mcp/ci.yml?branch=main&amp;style=flat-square&amp;label=build" alt="Build status"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-171717?style=flat-square" alt="MIT license"></a>
+  <a href="docs/REFERENCE.md#requirements"><img src="https://img.shields.io/badge/Python-3.10%2B-171717?style=flat-square" alt="Python 3.10 and newer"></a>
+  <a href="docs/DOCKER.md"><img src="https://img.shields.io/badge/deploy-Docker-171717?style=flat-square" alt="Docker deployment"></a>
+</p>
+
 ## Get started
 
 Copy this prompt. Paste it into your coding agent.
