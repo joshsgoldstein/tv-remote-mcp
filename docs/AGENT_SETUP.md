@@ -1,4 +1,4 @@
-# Set this up for a nontechnical user
+# Set this up for a user
 
 This is Home Control, a general smart-home platform. Read docs/INTEGRATIONS.md;
 Samsung is the first adapter. LG webOS and Sony BRAVIA PSK adapters are experimental.
