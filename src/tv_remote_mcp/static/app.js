@@ -31,6 +31,7 @@ function icon(name) {
 document.querySelectorAll('[data-icon]').forEach(node => node.append(icon(node.dataset.icon)));
 let devices = [], selected = null, busy = false, accessToken = '', activity = [];
 let statusSequence = 0, controlsEnabled = true;
+const appLists = new Map();
 const current = () => devices.find(tv => tv.id === selected);
 function notice(text, error = false) {
   const node = $('message'); node.textContent = text; node.hidden = !text;
@@ -62,6 +63,7 @@ function updateControls() {
     button.disabled = busy;
   });
   document.querySelectorAll('[data-paired]').forEach(node => node.disabled = busy || !controlsEnabled || tv?.enabled === false || !tv || !tv.paired);
+  document.querySelectorAll('#apps button').forEach(button => button.disabled ||= !tv?.actions.includes('launch'));
   $('wake').disabled = busy || !controlsEnabled || tv?.enabled === false || !tv?.capabilities.includes('wake') || (!tv?.paired && tv?.details.wake_requires_pairing);
   ['pair-main', 'pair-again'].forEach(id => $(id).disabled = busy || !controlsEnabled || tv?.enabled === false);
   // Kill switches remain usable while a slow command is in flight.
@@ -97,13 +99,17 @@ function select(id, refresh = true) {
   $('remote-panel').hidden = !tv.capabilities.includes('remote');
   $('generic-device-note').hidden = tv.capabilities.includes('remote');
   $('apps-panel').hidden = !tv.capabilities.includes('apps') && !tv.capabilities.includes('text');
-  $('launch-form').hidden = !tv.capabilities.includes('apps');
+  $('launch-details').hidden = !tv.actions.includes('launch');
+  $('streaming-panel').hidden = !tv.capabilities.includes('apps');
+  $('playback-panel').hidden = !tv.actions.includes('key') || (Array.isArray(tv.details.keys) && !['play', 'pause', 'rewind', 'forward'].some(key => tv.details.keys.includes(key)));
+  $('app-id').value = ''; $('tv-text').value = '';
+  $('launch-details').open = false;
   $('apps-list').hidden = !tv.capabilities.includes('apps');
   $('text-form').hidden = !tv.capabilities.includes('text');
   $('pair-again').hidden = !tv.capabilities.includes('pairing');
   $('pairing-description').textContent = tv.details.pairing_message || 'Authorize this connection using the instructions for this device’s integration.';
   $('device-model').textContent = [tv.model || tv.category, tv.details.experimental ? 'Experimental adapter' : null].filter(Boolean).join(' · ');
-  $('apps-heading').textContent = tv.capabilities.includes('text') ? 'Apps & text' : 'Apps'; $('device-address').textContent = tv.details.host || 'Unknown';
+  $('device-address').textContent = tv.details.host || 'Unknown';
   $('device-power').textContent = 'Unknown'; $('device-pairing').textContent = tv.paired ? 'Saved on this computer' : 'Not saved';
   $('connection-status').textContent = 'Not checked'; $('connection-status').className = 'pill';
   $('last-checked').textContent = 'Status not checked yet'; $('pairing-banner').hidden = tv.paired || !tv.capabilities.includes('pairing');
@@ -111,7 +117,8 @@ function select(id, refresh = true) {
   $('remote-caption').textContent = !controlsEnabled || tv.enabled === false ? 'Controls disabled' : tv.paired ? 'Ready for commands' : 'Pairing needed';
   $('remote-help').textContent = !controlsEnabled || tv.enabled === false ? 'A kill switch is blocking device commands.' : tv.paired ? 'Commands are sent directly over your home network.' : 'Pair your TV to unlock the remote.';
   $('art-panel').hidden = !tv.capabilities.includes('art'); resetArt();
-  ['apps', 'artworks'].forEach(name => {$(name).replaceChildren(); $(name).hidden = true;});
+  $('artworks').replaceChildren(); $('artworks').hidden = true;
+  renderApps();
   updateControls();
   if (refresh) refreshStatus().catch(error => notice(error.message, true));
 }
@@ -206,12 +213,47 @@ function itemList(id, items, title, onSelect, empty) {
   });
   if (items.length > 100) {const p = document.createElement('p'); p.textContent = 'Showing the first 100 items.'; container.append(p);}
 }
+function renderApps() {
+  const tv = current(), list = appLists.get(selected);
+  $('apps').replaceChildren(); $('apps').hidden = !list?.length;
+  $('apps-list').textContent = list === undefined ? 'Load apps' : 'Refresh apps';
+  $('apps-help').textContent = list === undefined ? "Load this TV's apps, then choose one to open it on the TV." : list.length ? 'Choose an app to open it on the TV.' : 'This TV did not return an app list. You can still open a known app ID under More controls.';
+  $('apps-note').hidden = !list || list.length <= 100;
+  $('apps-note').textContent = 'Showing the first 100 apps.';
+  if (!tv || !list) return;
+  const deviceId = tv.id;
+  list.slice(0, 100).forEach(app => {
+    const button = document.createElement('button'), label = document.createElement('span');
+    button.type = 'button'; button.setAttribute('data-paired', '');
+    button.setAttribute('aria-label', `Open ${app.name} on ${tv.name}`);
+    button.disabled = !tv.actions.includes('launch');
+    label.textContent = app.name; button.append(icon('play'), label);
+    button.addEventListener('click', () => {
+      if (selected !== deviceId || !tv.actions.includes('launch')) return;
+      const payload = {action: 'launch', app_id: app.id};
+      if (tv.integration === 'samsung') payload.app_type = app.type;
+      command(payload, `Open ${app.name}`);
+    });
+    $('apps').append(button);
+  });
+}
 $('apps-list').addEventListener('click', async () => {
-  const result = await command({action: 'apps'}, 'Load applications');
-  if (result) itemList('apps', result.apps, item => item.name || item.appId || item.app_id || item.id || 'Unnamed app', item => {
+  const deviceId = selected;
+  const result = await command({action: 'apps'}, 'Load TV apps');
+  if (!result) return;
+  const seen = new Set();
+  const apps = (Array.isArray(result.apps) ? result.apps : []).flatMap(item => {
+    if (!item || typeof item !== 'object') return [];
     const id = String(item.appId || item.app_id || item.id || '');
-    if (id) {const payload = {action: 'launch', app_id: id}; if (current()?.integration === 'samsung') payload.app_type = Number(item.app_type) === 1 ? 'NATIVE_LAUNCH' : 'DEEP_LINK'; command(payload, 'Launch application');}
-  }, 'This TV did not return an app list. You can still launch a known app ID.');
+    if (!id || seen.has(id)) return [];
+    seen.add(id);
+    return [{id, name: String(item.name || item.title || id), type: Number(item.app_type) === 1 ? 'NATIVE_LAUNCH' : 'DEEP_LINK'}];
+  });
+  // Only order names. App IDs always come from the selected TV's response.
+  const streaming = /netflix|youtube|prime video|amazon video|disney|hulu|hbo|max\b|peacock|paramount|apple tv|plex|tubi/i;
+  apps.sort((a, b) => Number(streaming.test(b.name)) - Number(streaming.test(a.name)) || a.name.localeCompare(b.name));
+  appLists.set(deviceId, apps);
+  if (selected === deviceId) {renderApps(); updateControls();}
 });
 $('art-list').addEventListener('click', async () => {
   const result = await command({action: 'art_list'}, 'Load artwork');

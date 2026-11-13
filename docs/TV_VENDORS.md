@@ -127,3 +127,19 @@ All three adapters check the device and master switches before commands.
 They check again after a connection or authorization step.
 This includes pairing, wake, apps, and remote keys.
 Keys use private files with mode 0600. Inventory and status never return them.
+
+## Streaming apps and playback
+
+In the dashboard, select your TV. Select **Load apps** under **Streaming & apps**.
+Choose an app button to open that app on the TV. Streaming services appear first.
+The list comes from your TV. It stays in this browser tab until you reload the page.
+Select **Refresh apps** after you install or remove an app.
+
+If your TV does not return an app list, use **More controls**, then
+**Open an app by ID**. Use an installed app ID for that TV. IDs differ by vendor.
+The dashboard does not install apps or sign in to streaming accounts.
+
+Start a video in the TV app. Use **TV playback** for play, pause, rewind, and
+fast forward. App and firmware support varies. These buttons send remote commands.
+They do not confirm the video state or provide a video feed in the browser.
+Both control switches apply to app launches and playback commands.

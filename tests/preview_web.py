@@ -42,7 +42,16 @@ class PreviewController(Controller):
         return {"status": "command_sent"}
 
     def apps(self, tv_id):
-        return {"apps": [{"name": "Example player", "appId": "example.player"}]}
+        return {
+            "apps": [
+                {"name": "Netflix", "appId": "demo.netflix", "app_type": 2},
+                {"name": "YouTube", "appId": "demo.youtube", "app_type": 2},
+                {"name": "Prime Video", "appId": "demo.prime", "app_type": 2},
+                {"name": "Disney+", "appId": "demo.disney", "app_type": 2},
+                {"name": "Apple TV", "appId": "demo.apple", "app_type": 1},
+                {"name": "Demo player", "appId": "demo.player"},
+            ]
+        }
 
     def launch(self, tv_id, app_id, app_type="DEEP_LINK"):
         return {"status": "command_sent"}
